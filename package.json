@@ -1,0 +1,15 @@
+{
+  "name": "playtest",
+  "version": "1.0.0",
+  "description": "cs174a group project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "three": "^0.168.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.2"
+  }
+}
