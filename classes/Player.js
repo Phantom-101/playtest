@@ -42,10 +42,10 @@ export default class Player extends GameObject {
             this.velocity.x += this.moveSpeed;
         }
         if (this.pressedKeys.has(38)) { // Up arrow key
-            this.velocity.y += this.moveSpeed;
+            this.velocity.z += this.moveSpeed;
         }
         if (this.pressedKeys.has(40)) { // Down arrow key
-            this.velocity.y -= this.moveSpeed;
+            this.velocity.z -= this.moveSpeed;
         }
 
         // Normalize velocity for consistent diagonal speed
