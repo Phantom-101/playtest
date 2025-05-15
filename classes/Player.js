@@ -13,11 +13,13 @@ export default class Player extends GameObject {
     * Initialize event listeners for keyboard controls
     */
     initializeControls(document) {
+        
         this.onKeyDown = this.onKeyDown.bind(this);
         document.addEventListener("keydown", this.onKeyDown, false);
 
         this.onKeyUp = this.onKeyUp.bind(this);        
         document.addEventListener("keyup", this.onKeyUp, false);
+        
     }
 
     onKeyDown(event) {
@@ -35,16 +37,16 @@ export default class Player extends GameObject {
         this.velocity.set(0, 0, 0);
 
         // Update velocity based on currently pressed keys
-        if (this.pressedKeys.has(37)) { // Left arrow key
+        if (this.pressedKeys.has(65)) { // 'A' key
             this.velocity.x -= this.moveSpeed;
         }
-        if (this.pressedKeys.has(39)) { // Right arrow key
+        if (this.pressedKeys.has(68)) { // 'D' key
             this.velocity.x += this.moveSpeed;
         }
-        if (this.pressedKeys.has(38)) { // Up arrow key
+        if (this.pressedKeys.has(87)) { // 'W' key
             this.velocity.z += this.moveSpeed;
         }
-        if (this.pressedKeys.has(40)) { // Down arrow key
+        if (this.pressedKeys.has(83)) { // 'S' key
             this.velocity.z -= this.moveSpeed;
         }
 

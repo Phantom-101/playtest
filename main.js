@@ -1,13 +1,15 @@
 import * as THREE from 'three';
 //import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
-import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
-import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+
+import CameraController from './classes/CameraController.js';
 import GameObject from './classes/GameObject.js';
 import Player from './classes/Player.js';
 
 const scene = new THREE.Scene();
 scene.add(new THREE.AxesHelper(5));
+const Clock = new THREE.Clock();
 
 // Rendering
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -37,30 +39,31 @@ scene.add(pointLight);
 //scene.add(ambientLight);
 
 // Controls
-//const controls = new FirstPersonControls(camera, renderer.domElement);
-const controls = new PointerLockControls(camera, document.body);
 camera.position.set(0, 5, 10);
-//controls.target.set(0, 5, 0);
+const controls = new CameraController(camera, document);
+
 /*
 const blocker = document.getElementById( 'blocker' );
 const instructions = document.getElementById( 'instructions' );
 
+
 instructions.addEventListener( 'click', function () {
-  controls.lock();
-} );
+  document.body.requestPointerLock();
+});
 
-controls.addEventListener( 'lock', function () {
-  instructions.style.display = 'none';
-  blocker.style.display = 'none';
-} );
-
-controls.addEventListener( 'unlock', function () {
-  blocker.style.display = 'block';
-  instructions.style.display = '';
-} );
-
-scene.add( controls.object );
+document.addEventListener('pointerlockchange', function () {
+  if (document.pointerLockElement == document.body) {
+    // Pointer is locked
+    instructions.style.display = 'none';
+    blocker.style.display = 'none';
+  } else {
+    // Pointer is unlocked
+    blocker.style.display = 'block';
+    instructions.style.display = '';
+  }
+});
 */
+
 
 // Models
 
@@ -193,9 +196,10 @@ function updatePhysics() {
 }
 
 function animate() {
+  const delta = Clock.getDelta();
   redCubeGO.move(); // Move the player
   updatePhysics();
-  controls.update();
+  controls.update(delta);
 	renderer.render(scene, camera);
 }
 

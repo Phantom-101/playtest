@@ -2,12 +2,38 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>Assignment2</title>
+		<title>Playtest</title>
 		<style>
 			body { margin: 0; }
+			#blocker {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 100;
+            }
+            #instructions {
+                font-size: 2em;
+                color: white;
+                text-align: center;
+                cursor: pointer;
+            }
 		</style>
 	</head>
 	<body>
+		<!--
+		<div id="blocker">
+            <div id="instructions">
+                Click to play<br>
+                (WASD to move, mouse to look)
+            </div>
+        </div>
+		-->
 		<script type="module" src="/main.js"></script>
 	</body>
 </html>
