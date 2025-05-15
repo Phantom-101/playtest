@@ -2,11 +2,13 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 
+import GameObject from './classes/GameObject.js';
+import Player from './classes/Player.js';
+
 const scene = new THREE.Scene();
 scene.add(new THREE.AxesHelper(5));
 
 // Rendering
-
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 const renderer = new THREE.WebGLRenderer();
@@ -135,13 +137,13 @@ for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
 //  shininess: 100   // Shininess of the material
 //});
 
-// const custom_cube_geometry = new THREE.BufferGeometry();
-// custom_cube_geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-// custom_cube_geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
-// custom_cube_geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indices), 1));
+const redCubeGeometry = new THREE.BoxGeometry( 1, 1, 1 );
+const redCubeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+const redCube = new THREE.Mesh( redCubeGeometry, redCubeMaterial );
 
-// let cube = new THREE.Mesh(custom_cube_geometry, phong_material);
-// scene.add(cube);
+const redCubeGO = new Player('RedCube', redCube, document);
+//redCubeGO.attachCamera(camera);
+redCubeGO.addToScene(scene); // Add the red cube to the scene
 
 // Game loop
 
@@ -150,6 +152,7 @@ function updatePhysics() {
 }
 
 function animate() {
+  redCubeGO.move(); // Move the player
   updatePhysics();
   controls.update();
 	renderer.render(scene, camera);
