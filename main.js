@@ -1,7 +1,8 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+//import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
-
+import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import GameObject from './classes/GameObject.js';
 import Player from './classes/Player.js';
 
@@ -17,6 +18,11 @@ document.body.appendChild(renderer.domElement);
 
 // Lights
 
+const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 2.5 );
+light.position.set( 0.5, 1, 0.75 );
+scene.add( light );
+
+
 const pointLight = new THREE.PointLight(0xffffff, 50, 100);
 pointLight.position.set(5, 5, 5); // Position the light
 scene.add(pointLight);
@@ -30,11 +36,30 @@ scene.add(pointLight);
 //scene.add(ambientLight);
 
 // Controls
-
-const controls = new OrbitControls(camera, renderer.domElement);
+//const controls = new FirstPersonControls(camera, renderer.domElement);
+const controls = new PointerLockControls(camera, document.body);
 camera.position.set(0, 5, 10);
-controls.target.set(0, 5, 0);
+//controls.target.set(0, 5, 0);
+/*
+const blocker = document.getElementById( 'blocker' );
+const instructions = document.getElementById( 'instructions' );
 
+instructions.addEventListener( 'click', function () {
+  controls.lock();
+} );
+
+controls.addEventListener( 'lock', function () {
+  instructions.style.display = 'none';
+  blocker.style.display = 'none';
+} );
+
+controls.addEventListener( 'unlock', function () {
+  blocker.style.display = 'block';
+  instructions.style.display = '';
+} );
+
+scene.add( controls.object );
+*/
 
 // Models
 
@@ -88,13 +113,14 @@ const phong_material = new THREE.MeshPhongMaterial({
   shininess: 100   // Shininess of the material
 });
 
-const redCubeGeometry = new THREE.BoxGeometry( 1, 1, 1 );
+const redCubeGeometry = new THREE.BoxGeometry( 1, 10, 1 );
 const redCubeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 const redCube = new THREE.Mesh( redCubeGeometry, redCubeMaterial );
 
 const redCubeGO = new Player('RedCube', redCube, document);
 //redCubeGO.attachCamera(camera);
 redCubeGO.addToScene(scene); // Add the red cube to the scene
+
 
 // Game loop
 
