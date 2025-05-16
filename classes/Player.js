@@ -1,12 +1,15 @@
 import GameObject from "./GameObject";
 import * as THREE from "three";
+import { PointerLockControls  } from "./PointerLockControls";
 
 export default class Player extends GameObject {
-    constructor(name, geometry, document) {
+    constructor(name, geometry, document, controls) {
         super(name, geometry);
         this.initializeControls(document);
         this.moveSpeed = 0.1;
         this.pressedKeys = new Set();
+        this.controls = controls;
+        this.camera = controls.object;
     }
 
     /*
@@ -49,35 +52,28 @@ export default class Player extends GameObject {
         if (this.pressedKeys.has(83)) { // 'S' key
             this.velocity.z -= this.moveSpeed;
         }
-
-        // Normalize velocity for consistent diagonal speed
-        if (this.velocity.length() > 0) {
-            this.velocity.normalize().multiplyScalar(this.moveSpeed);
-        }
-
-        if(this.pressedKeys == null) {
-            this.velocity.set(0, 0, 0); // Stop the player if no keys are pressed
-        }
-    }
-
-    /*
-    * Camera
-    */
-
-    attachCamera(camera) {
-        this.camera = camera;
-        this.cameraOffset = new THREE.Vector3(0, 0, 0); // Offset from the player
-    }
-
-    updateCamera() {
-        if(this.camera) {
-            this.camera.position.copy(this.geometry.position).add(this.cameraOffset);
-        }
     }
 
     move() {
-        super.move();
-        this.updateCamera();
+        const cameraDir = this.controls.getDirection(new THREE.Vector3());
+        cameraDir.y = 0; // Ignore vertical direction
+        cameraDir.normalize(); // Normalize the direction vector
+
+        const cameraRight = new THREE.Vector3().crossVectors(cameraDir, new THREE.Vector3(0, 1, 0)).normalize();
+        
+        const moveDir = new THREE.Vector3();
+        moveDir.addScaledVector(cameraDir, this.velocity.z);
+        moveDir.addScaledVector(cameraRight, this.velocity.x);
+
+        if (moveDir.length() > 0) {
+            moveDir.normalize().multiplyScalar(this.moveSpeed);
+        }
+
+        this.geometry.position.add(moveDir); // Update the position of the player
+        this.camera.position.copy(this.geometry.position).add(new THREE.Vector3(0, 5, 0)); // Update the camera position to match the player
+
+        this.boundingBox.setFromObject(this.geometry);
+        //super.move();
         //console.log(`Player ${this.name} speed: ${this.velocity.length()}`);
     }
 }

@@ -2,8 +2,8 @@ import * as THREE from 'three';
 //import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 
-
-import CameraController from './classes/CameraController.js';
+// This is a modified version of the PointerLockControls from three.js
+import { PointerLockControls } from './classes/PointerLockControls.js';
 import GameObject from './classes/GameObject.js';
 import Player from './classes/Player.js';
 
@@ -40,29 +40,26 @@ scene.add(pointLight);
 
 // Controls
 camera.position.set(0, 5, 10);
-const controls = new CameraController(camera, document);
-
-/*
+//const controls = new CameraController(camera, document);
+const controls = new PointerLockControls( camera, document.body );
 const blocker = document.getElementById( 'blocker' );
 const instructions = document.getElementById( 'instructions' );
 
-
 instructions.addEventListener( 'click', function () {
-  document.body.requestPointerLock();
-});
+  controls.lock();
+} );
 
-document.addEventListener('pointerlockchange', function () {
-  if (document.pointerLockElement == document.body) {
-    // Pointer is locked
-    instructions.style.display = 'none';
-    blocker.style.display = 'none';
-  } else {
-    // Pointer is unlocked
-    blocker.style.display = 'block';
-    instructions.style.display = '';
-  }
-});
-*/
+controls.addEventListener( 'lock', function () {
+  instructions.style.display = 'none';
+  blocker.style.display = 'none';
+} );
+
+controls.addEventListener( 'unlock', function () {
+  blocker.style.display = 'block';
+  instructions.style.display = '';
+} );
+
+
 
 
 // Models
@@ -184,9 +181,10 @@ const redCubeGeometry = new THREE.BoxGeometry( 1, 10, 1 );
 const redCubeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 const redCube = new THREE.Mesh( redCubeGeometry, redCubeMaterial );
 
-const redCubeGO = new Player('RedCube', redCube, document);
-//redCubeGO.attachCamera(camera);
+const redCubeGO = new Player('RedCube', redCube, document, controls);
 redCubeGO.addToScene(scene); // Add the red cube to the scene
+
+//console.log("Window (viewport) size: ", window.innerWidth + "x" + window.innerHeight);
 
 
 // Game loop
