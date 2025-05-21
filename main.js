@@ -20,10 +20,11 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // Lights
-
+/*
 const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 2.5 );
 light.position.set( 0.5, 1, 0.75 );
 scene.add( light );
+*/
 
 
 const pointLight = new THREE.PointLight(0xffffff, 50, 100);
