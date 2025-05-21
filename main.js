@@ -211,11 +211,12 @@ for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
 //  shininess: 100   // Shininess of the material
 //});
 
-const redCubeGeometry = new THREE.BoxGeometry( 1, 10, 1 );
+const redCubeGeometry = new THREE.BoxGeometry( 1, 5, 1 );
 const redCubeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 const redCube = new THREE.Mesh( redCubeGeometry, redCubeMaterial );
 
 const redCubeGO = new Player('RedCube', redCube, document, controls);
+redCubeGO.threeObj.position.set(10,5,0);
 redCubeGO.addToScene(scene); // Add the red cube to the scene
 
 //console.log("Window (viewport) size: ", window.innerWidth + "x" + window.innerHeight);
