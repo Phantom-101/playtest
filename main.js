@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-//import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
+//import Ammo from 'ammo.js';
 
 // This is a modified version of the PointerLockControls from three.js
 import { PointerLockControls } from './classes/PointerLockControls.js';
@@ -18,6 +19,34 @@ const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+
+
+
+// Dev Camera
+// Create a dev camera
+const devCamera = new THREE.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 0.1, 1000);
+devCamera.position.set(20, 20, 20);
+
+// OrbitControls for dev camera
+const devControls = new OrbitControls(devCamera, renderer.domElement);
+devControls.enableDamping = true;
+devControls.dampingFactor = 0.05;
+
+let useDevCamera = false;
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyC') { // Press 'C' to toggle cameras
+    useDevCamera = !useDevCamera;
+    if (useDevCamera) {
+      controls.unlock(); // Unlock pointer when switching to dev camera
+      blocker.style.display = 'none';
+      instructions.style.display = 'none';
+    } else {
+      // Show blocker/instructions when switching back to pointer lock camera
+      blocker.style.display = 'block';
+      instructions.style.display = '';
+    }
+  }
+});
 
 // Lights
 /*
@@ -39,26 +68,30 @@ scene.add(pointLight);
 //const ambientLight = new THREE.AmbientLight(0x505050, 0.1);  // Soft white light
 //scene.add(ambientLight);
 
-// Controls
+// Controls and Locking
 camera.position.set(0, 5, 10);
-//const controls = new CameraController(camera, document);
 const controls = new PointerLockControls( camera, document.body );
 const blocker = document.getElementById( 'blocker' );
 const instructions = document.getElementById( 'instructions' );
 
+
 instructions.addEventListener( 'click', function () {
-  controls.lock();
-} );
+  if (!useDevCamera) {
+    controls.lock();
+  }  
+});
 
 controls.addEventListener( 'lock', function () {
   instructions.style.display = 'none';
   blocker.style.display = 'none';
-} );
+});
 
 controls.addEventListener( 'unlock', function () {
-  blocker.style.display = 'block';
-  instructions.style.display = '';
-} );
+  if(!useDevCamera) {
+    blocker.style.display = 'block';
+    instructions.style.display = '';
+  }
+});
 
 
 
@@ -187,19 +220,80 @@ redCubeGO.addToScene(scene); // Add the red cube to the scene
 
 //console.log("Window (viewport) size: ", window.innerWidth + "x" + window.innerHeight);
 
+// Physics variables
+const gravityConstant = - 9.8;
+let collisionConfiguration;
+let dispatcher;
+let broadphase;
+let solver;
+let softBodySolver;
+let physicsWorld;
+let transformAux1;
+let tmpTransform;
+
+let ammoLoaded = false;
+
+const rigidBodies = [];
+const margin = 0.05;
+
+// Init Physics
+
+window.addEventListener('DOMContentLoaded', async () => {
+  Ammo().then((lib) => {
+      Ammo = lib;
+      initPhysics();
+      initPhysicsObjects();
+      ammoLoaded = true;
+  });
+});
+
+function initPhysics() {
+  collisionConfiguration = new Ammo.btSoftBodyRigidBodyCollisionConfiguration();
+  dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
+  broadphase = new Ammo.btDbvtBroadphase();
+  solver = new Ammo.btSequentialImpulseConstraintSolver();
+  softBodySolver = new Ammo.btDefaultSoftBodySolver();
+  physicsWorld = new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collisionConfiguration, softBodySolver );
+  physicsWorld.setGravity( new Ammo.btVector3( 0, gravityConstant, 0 ) );
+  physicsWorld.getWorldInfo().set_m_gravity( new Ammo.btVector3( 0, gravityConstant, 0 ) );
+  transformAux1 = new Ammo.btTransform();
+  tmpTransform = new Ammo.btTransform();
+}
+
+// Init Physics Objects
+function initPhysicsObjects() {
+  redCubeGO.createRigidBody(physicsWorld, {height: 10, radius: 5}, "capsule", 100);
+  rigidBodies.push({mesh: redCubeGO.threeObj, rigidBody: redCubeGO.rb});
+}
+
 
 // Game loop
 
-function updatePhysics() {
-  
+function updatePhysics(delta) {
+  physicsWorld.stepSimulation(delta, 10);
+
+  // Update Rigid Bodies
+  for (let i = 0; i < rigidBodies.length; ++i) {
+    rigidBodies[i].rigidBody.motionState.getWorldTransform(tmpTransform);
+    const pos = tmpTransform.getOrigin();
+    const quat = tmpTransform.getRotation();
+    const pos3 = new THREE.Vector3(pos.x(), pos.y(), pos.z());
+    const quat3 = new THREE.Quaternion(quat.x(), quat.y(), quat.z(), quat.w());
+
+    rigidBodies[i].mesh.position.copy(pos3);
+    rigidBodies[i].mesh.quaternion.copy(quat3);
+  }
 }
 
 function animate() {
   const delta = Clock.getDelta();
   redCubeGO.move(); // Move the player
-  updatePhysics();
+  if(ammoLoaded == true) {
+    updatePhysics(delta);
+  }  
   controls.update(delta);
-	renderer.render(scene, camera);
+  devControls.update();
+	renderer.render(scene, useDevCamera ? devCamera : camera);
 }
 
 renderer.setAnimationLoop(animate);

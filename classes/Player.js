@@ -3,8 +3,8 @@ import * as THREE from "three";
 import { PointerLockControls  } from "./PointerLockControls";
 
 export default class Player extends GameObject {
-    constructor(name, geometry, document, controls) {
-        super(name, geometry);
+    constructor(name, threeObj, document, controls) {
+        super(name, threeObj);
         this.initializeControls(document);
         this.moveSpeed = 0.1;
         this.pressedKeys = new Set();
@@ -69,11 +69,9 @@ export default class Player extends GameObject {
             moveDir.normalize().multiplyScalar(this.moveSpeed);
         }
 
-        this.geometry.position.add(moveDir); // Update the position of the player
-        this.camera.position.copy(this.geometry.position).add(new THREE.Vector3(0, 5, 0)); // Update the camera position to match the player
+        this.threeObj.position.add(moveDir); // Update the position of the player
+        this.camera.position.copy(this.threeObj.position).add(new THREE.Vector3(0, 5, 0)); // Update the camera position to match the player
 
-        this.boundingBox.setFromObject(this.geometry);
-        //super.move();
         //console.log(`Player ${this.name} speed: ${this.velocity.length()}`);
     }
 }
