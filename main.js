@@ -13,21 +13,23 @@ scene.add(new THREE.AxesHelper(5));
 const Clock = new THREE.Clock();
 
 // Rendering
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
 const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// Cameras
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 
-// Dev Camera
+
+
+// #region Dev Camera
 // Create a dev camera
 const devCamera = new THREE.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 0.1, 1000);
 devCamera.position.set(20, 20, 20);
 
-// OrbitControls for dev camera
+  // OrbitControls for dev camera
 const devControls = new OrbitControls(devCamera, renderer.domElement);
 devControls.enableDamping = true;
 devControls.dampingFactor = 0.05;
@@ -47,28 +49,12 @@ window.addEventListener('keydown', (e) => {
     }
   }
 });
-
-// Lights
-/*
-const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 2.5 );
-light.position.set( 0.5, 1, 0.75 );
-scene.add( light );
-*/
+// #endregion
 
 
-const pointLight = new THREE.PointLight(0xffffff, 50, 100);
-pointLight.position.set(5, 5, 5); // Position the light
-scene.add(pointLight);
 
 
-//const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
-//directionalLight.position.set(0.5, .0, 1.0).normalize();
-//scene.add(directionalLight);
-
-//const ambientLight = new THREE.AmbientLight(0x505050, 0.1);  // Soft white light
-//scene.add(ambientLight);
-
-// Controls and Locking
+// #region Controls and Locking
 camera.position.set(0, 5, 10);
 const controls = new PointerLockControls( camera, document.body );
 const blocker = document.getElementById( 'blocker' );
@@ -92,16 +78,12 @@ controls.addEventListener( 'unlock', function () {
     instructions.style.display = '';
   }
 });
+// #endregion
 
 
 
 
-// Models
-
-const fbxLoader = new FBXLoader();
-const textureLoader = new THREE.TextureLoader();
-
-// Helpers
+// #region Helper Functions
 
 function rewrap(texture, repeat) {
   const newTexture = texture.clone();
@@ -148,9 +130,19 @@ function rad(deg) {
 function rand(min, max) {
   return Math.random() * (max - min) + min;
 }
+// #endregion
 
-// Objects
 
+
+// #region Objects and Models
+// Models
+const fbxLoader = new FBXLoader();
+const textureLoader = new THREE.TextureLoader();
+
+
+// #region Objects & Game Objects
+
+// #region Map
 const mapSize = 100;
 const spacing = 20;
 
@@ -179,9 +171,22 @@ fbxLoader.load("models/cube.fbx", (model) => {
     }
   });
 });
+// #endregion
 
-// Lights
+// #region Player
+const playerGeometry = new THREE.BoxGeometry( 1, 5, 1 );
+const playerMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+const player3Obj = new THREE.Mesh( playerGeometry, playerMaterial );
+const playerGO = new Player('Player', player3Obj, document, controls);
+playerGO.threeObj.position.set(10,5,0);
+playerGO.addToScene(scene);
+// #endregion
 
+
+// #endregion
+
+
+// #region Lights
 const ambientLight = new THREE.AmbientLight(0x505050, 0.1);  // Soft white light
 scene.add(ambientLight);
 
@@ -200,27 +205,14 @@ for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
     }
   }
 }
+// #endregion
 
 
-//const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
-//directionalLight.position.set(0.5, .0, 1.0).normalize();
-//scene.add(directionalLight);
+// #endregion
 
-//const phong_material = new THREE.MeshPhongMaterial({
-//  color: 0x00ff00, // Green color
-//  shininess: 100   // Shininess of the material
-//});
 
-const redCubeGeometry = new THREE.BoxGeometry( 1, 5, 1 );
-const redCubeMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-const redCube = new THREE.Mesh( redCubeGeometry, redCubeMaterial );
 
-const redCubeGO = new Player('RedCube', redCube, document, controls);
-redCubeGO.threeObj.position.set(10,5,0);
-redCubeGO.addToScene(scene); // Add the red cube to the scene
-
-//console.log("Window (viewport) size: ", window.innerWidth + "x" + window.innerHeight);
-
+// #region Physics
 // Physics variables
 const gravityConstant = - 9.8;
 let collisionConfiguration;
@@ -237,8 +229,7 @@ let ammoLoaded = false;
 const rigidBodies = [];
 const margin = 0.05;
 
-// Init Physics
-
+// Load Ammo
 window.addEventListener('DOMContentLoaded', async () => {
   Ammo().then((lib) => {
       Ammo = lib;
@@ -248,6 +239,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
+
+// Init Physics
 function initPhysics() {
   collisionConfiguration = new Ammo.btSoftBodyRigidBodyCollisionConfiguration();
   dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
@@ -263,9 +256,16 @@ function initPhysics() {
 
 // Init Physics Objects
 function initPhysicsObjects() {
-  redCubeGO.createRigidBody(physicsWorld, {height: 10, radius: 5}, "capsule", 100);
-  rigidBodies.push({mesh: redCubeGO.threeObj, rigidBody: redCubeGO.rb});
+  playerGO.createRigidBody(physicsWorld, {height: 10, radius: 5}, "capsule", 100);
+  rigidBodies.push({mesh: playerGO.threeObj, rigidBody: playerGO.rb});
 }
+
+// Test Physics Objects
+
+
+
+// #endregion
+
 
 
 // Game loop
@@ -288,7 +288,7 @@ function updatePhysics(delta) {
 
 function animate() {
   const delta = Clock.getDelta();
-  redCubeGO.move(); // Move the player
+  playerGO.move(); // Move the player
   if(ammoLoaded == true) {
     updatePhysics(delta);
   }  
