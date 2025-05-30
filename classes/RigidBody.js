@@ -33,6 +33,8 @@ export default class RigidBody {
         this.body = new Ammo.btRigidBody(this.info);
 
         Ammo.destroy(btSize);
+
+        this.physicsWorld.addRigidBody(this.body);
     }
 
     createCapsule(mass, pos, quat, size) {
@@ -52,5 +54,7 @@ export default class RigidBody {
 
         this.info = new Ammo.btRigidBodyConstructionInfo(mass, this.motionState, this.shape, this.inertia);
         this.body = new Ammo.btRigidBody(this.info);
+
+        this.physicsWorld.addRigidBody(this.body);
     }
 }

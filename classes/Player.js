@@ -69,8 +69,18 @@ export default class Player extends GameObject {
             moveDir.normalize().multiplyScalar(this.moveSpeed);
         }
 
-        this.threeObj.position.add(moveDir); // Update the position of the player
-        this.camera.position.copy(this.threeObj.position).add(new THREE.Vector3(0, 5, 0)); // Update the camera position to match the player
+        //this.threeObj.position.add(moveDir); // Update the position of the player
+        if(this.rb && this.rb.body) {
+            console.log('moveDir: ' + moveDir.x + ', ' + moveDir.y + ', ' + moveDir.z);
+            const currentVelocity = this.rb.body.getLinearVelocity();
+            this.rb.body.setLinearVelocity(new Ammo.btVector3(
+                moveDir.x * 50,
+                currentVelocity.y(),
+                moveDir.z * 50
+            ));
+        }
+        
+        this.camera.position.copy(this.threeObj.position).add(new THREE.Vector3(0, 0, 0)); // Update the camera position to match the player
 
         //console.log(`Player ${this.name} speed: ${this.velocity.length()}`);
     }

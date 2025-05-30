@@ -7,7 +7,7 @@ export default class GameObject {
         this.threeObj = threeObj; // Geometry of the object
         this.velocity = new THREE.Vector3(0, 0, 0); // Initialize velocity to zero
         this.acceleration = new THREE.Vector3(0, 0, 0); // Initialize acceleration to zero
-
+        
         if(threeObj.position == undefined)
             this.threeObj.position.set(0, 0, 0);
         if(threeObj.quaternion == undefined)
@@ -15,6 +15,7 @@ export default class GameObject {
     }
 
     move() {
+        /*
         // Update the position of the object based on its acceleration
         this.velocity.x += this.acceleration.x;
         this.velocity.y += this.acceleration.y;
@@ -24,6 +25,7 @@ export default class GameObject {
         this.threeObj.position.x += this.velocity.x;
         this.threeObj.position.y += this.velocity.y;
         this.threeObj.position.z += this.velocity.z;
+        */
     }
 
     addToScene(scene) {
@@ -48,7 +50,7 @@ export default class GameObject {
         console.log(`Name: ${this.name}, Position: ${JSON.stringify(this.position)}`);
     }
 
-    createRigidBody(physicsWorld, size, shape, mass = 0, friction = 0.5, restitution = 0) {
+    createRigidBody(physicsWorld, size, shape, mass = 0, friction = 0, restitution = 0) {
         this.rb = new RigidBody(physicsWorld);
         switch (shape) {
             case "box":
@@ -58,6 +60,16 @@ export default class GameObject {
             case "capsule":
                 //Ex: size = {radius: 0.5, height: 1};
                 this.rb.createCapsule(mass, this.threeObj.position, this.threeObj.quaternion, size);
+                break;
+            case "BB":
+                const bbox = new THREE.Box3().setFromObject(this.threeObj);
+                const bbsize = new THREE.Vector3();
+                bbox.getSize(bbsize);
+                const bbcenter = new THREE.Vector3();
+                bbox.getCenter(bbcenter);
+
+                this.threeObj.position.copy(bbcenter);
+                this.rb.createBox(mass, bbcenter, this.threeObj.quaternion, bbsize);
                 break;
             default:
                 console.error("Unknown shape type: " + shape);

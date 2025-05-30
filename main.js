@@ -146,19 +146,25 @@ const textureLoader = new THREE.TextureLoader();
 const mapSize = 100;
 const spacing = 20;
 
+let floor;
+let ceiling;
+let columns = [];
+
+let floorGO;
+let ceilingGO;
+let columnsGO = [];
+
 fbxLoader.load("models/cube.fbx", (model) => {
   textureLoader.load("textures/concrete.jpg", (texture) => {
-    const floor = model.clone();
+    floor = model.clone();
     setCorners(floor, new THREE.Vector3(-mapSize, -1, -mapSize), new THREE.Vector3(mapSize, 0, mapSize));
     apply(floor, rewrap(texture, new THREE.Vector3(mapSize, mapSize)));
     receiveShadow(floor);
-    scene.add(floor);
 
-    const ceiling = model.clone();
+    ceiling = model.clone();
     setCorners(ceiling, new THREE.Vector3(-mapSize, 20, -mapSize), new THREE.Vector3(mapSize, 21, mapSize));
     apply(ceiling, rewrap(texture, new THREE.Vector3(mapSize, mapSize)));
     receiveShadow(ceiling);
-    scene.add(ceiling);
 
     for(let i = -mapSize; i <= mapSize; i += spacing) {
       for(let j = -mapSize; j <= mapSize; j += spacing) {
@@ -166,11 +172,29 @@ fbxLoader.load("models/cube.fbx", (model) => {
         setCorners(column, new THREE.Vector3(i - 1, 0, j - 1), new THREE.Vector3(i + 1, 20, j + 1));
         apply(column, rewrap(texture, new THREE.Vector3(20, 2)));
         castShadow(column);
-        scene.add(column);
+        columns.push(column);
       }
+    }
+
+    // Create Map Game Objects
+    floorGO = new GameObject('Floor', floor);
+    floorGO.addToScene(scene);
+    ceilingGO = new GameObject('Ceiling', ceiling);
+    ceilingGO.addToScene(scene);
+    columns.forEach((column) => {
+      const columnGO = new GameObject('Column', column);
+      columnGO.addToScene(scene);
+      columnsGO.push(columnGO);
+    });
+
+    if(ammoLoaded == true) {
+      initPhysicsObjects();
     }
   });
 });
+
+
+
 // #endregion
 
 // #region Player
@@ -178,7 +202,7 @@ const playerGeometry = new THREE.BoxGeometry( 1, 5, 1 );
 const playerMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 const player3Obj = new THREE.Mesh( playerGeometry, playerMaterial );
 const playerGO = new Player('Player', player3Obj, document, controls);
-playerGO.threeObj.position.set(10,5,0);
+playerGO.threeObj.position.set(10,20,0);
 playerGO.addToScene(scene);
 // #endregion
 
@@ -208,6 +232,14 @@ for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
 // #endregion
 
 
+// Test
+const test1geo = new THREE.BoxGeometry( 1, 1, 1 );
+const test1mat = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+const test1obj = new THREE.Mesh( test1geo, test1mat );
+const test1go = new GameObject('Test1', test1obj);
+test1go.threeObj.position.set(10,20,-10);
+test1go.addToScene(scene);
+
 // #endregion
 
 
@@ -225,6 +257,7 @@ let transformAux1;
 let tmpTransform;
 
 let ammoLoaded = false;
+let physObjsLoaded = false;
 
 const rigidBodies = [];
 const margin = 0.05;
@@ -233,9 +266,7 @@ const margin = 0.05;
 window.addEventListener('DOMContentLoaded', async () => {
   Ammo().then((lib) => {
       Ammo = lib;
-      initPhysics();
-      initPhysicsObjects();
-      ammoLoaded = true;
+      initPhysics();    
   });
 });
 
@@ -252,12 +283,27 @@ function initPhysics() {
   physicsWorld.getWorldInfo().set_m_gravity( new Ammo.btVector3( 0, gravityConstant, 0 ) );
   transformAux1 = new Ammo.btTransform();
   tmpTransform = new Ammo.btTransform();
+  ammoLoaded = true;
 }
 
 // Init Physics Objects
 function initPhysicsObjects() {
-  playerGO.createRigidBody(physicsWorld, {height: 10, radius: 5}, "capsule", 100);
+  playerGO.createRigidBody(physicsWorld, null, "BB", 5, 0.1);
   rigidBodies.push({mesh: playerGO.threeObj, rigidBody: playerGO.rb});
+  playerGO.rb.body.setAngularFactor(new Ammo.btVector3(0, 1, 0));
+
+  test1go.createRigidBody(physicsWorld, {x: 1, y: 1, z: 1}, "box", 1);
+  rigidBodies.push({mesh: test1go.threeObj, rigidBody: test1go.rb});
+
+  floorGO.createRigidBody(physicsWorld, null, "BB", 0);
+  rigidBodies.push({mesh: floorGO.threeObj, rigidBody: floorGO.rb});
+
+  columnsGO.forEach((columnGO) => {
+    columnGO.createRigidBody(physicsWorld, null, "BB", 0);
+    rigidBodies.push({mesh: columnGO.threeObj, rigidBody: columnGO.rb});
+  });
+
+  physObjsLoaded = true;
 }
 
 // Test Physics Objects
@@ -289,7 +335,7 @@ function updatePhysics(delta) {
 function animate() {
   const delta = Clock.getDelta();
   playerGO.move(); // Move the player
-  if(ammoLoaded == true) {
+  if(ammoLoaded == true && physObjsLoaded == true) {
     updatePhysics(delta);
   }  
   controls.update(delta);
