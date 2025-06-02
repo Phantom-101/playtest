@@ -9,7 +9,6 @@ import GameObject from './classes/GameObject.js';
 import Player from './classes/Player.js';
 
 const scene = new THREE.Scene();
-scene.add(new THREE.AxesHelper(5));
 const Clock = new THREE.Clock();
 
 // Rendering
@@ -20,16 +19,15 @@ document.body.appendChild(renderer.domElement);
 
 // Cameras
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-
-
+scene.add(camera);
 
 // #region Dev Camera
 // Create a dev camera
 const devCamera = new THREE.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 0.1, 1000);
 devCamera.position.set(20, 20, 20);
+scene.add(devCamera);
 
-  // OrbitControls for dev camera
+// OrbitControls for dev camera
 const devControls = new OrbitControls(devCamera, renderer.domElement);
 devControls.enableDamping = true;
 devControls.dampingFactor = 0.05;
@@ -51,15 +49,11 @@ window.addEventListener('keydown', (e) => {
 });
 // #endregion
 
-
-
-
 // #region Controls and Locking
 camera.position.set(0, 5, 10);
 const controls = new PointerLockControls( camera, document.body );
 const blocker = document.getElementById( 'blocker' );
 const instructions = document.getElementById( 'instructions' );
-
 
 instructions.addEventListener( 'click', function () {
   if (!useDevCamera) {
@@ -80,11 +74,7 @@ controls.addEventListener( 'unlock', function () {
 });
 // #endregion
 
-
-
-
 // #region Helper Functions
-
 function rewrap(texture, repeat) {
   const newTexture = texture.clone();
   newTexture.wrapS = THREE.RepeatWrapping;
@@ -132,15 +122,12 @@ function rand(min, max) {
 }
 // #endregion
 
-
-
-// #region Objects and Models
+// #region Objects
 // Models
 const fbxLoader = new FBXLoader();
 const textureLoader = new THREE.TextureLoader();
 
-
-// #region Objects & Game Objects
+// #region Game Objects
 
 // #region Map
 const mapSize = 100;
@@ -192,9 +179,6 @@ fbxLoader.load("models/cube.fbx", (model) => {
     }
   });
 });
-
-
-
 // #endregion
 
 // #region Player
@@ -206,9 +190,7 @@ playerGO.threeObj.position.set(10,20,0);
 playerGO.addToScene(scene);
 // #endregion
 
-
 // #endregion
-
 
 // #region Lights
 const ambientLight = new THREE.AmbientLight(0x505050, 0.1);  // Soft white light
@@ -229,8 +211,13 @@ for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
     }
   }
 }
-// #endregion
 
+const flashlight = new THREE.SpotLight(0xffffff, 5, 50, Math.PI / 4, 0.5);
+flashlight.position.set(0, 0, 0);
+flashlight.target.position.set(0, 0, -1);
+camera.add(flashlight);
+camera.add(flashlight.target);
+// #endregion
 
 // Test
 const test1geo = new THREE.BoxGeometry( 1, 1, 1 );
@@ -239,10 +226,7 @@ const test1obj = new THREE.Mesh( test1geo, test1mat );
 const test1go = new GameObject('Test1', test1obj);
 test1go.threeObj.position.set(10,20,-10);
 test1go.addToScene(scene);
-
 // #endregion
-
-
 
 // #region Physics
 // Physics variables
@@ -269,7 +253,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       initPhysics();    
   });
 });
-
 
 // Init Physics
 function initPhysics() {
@@ -305,17 +288,9 @@ function initPhysicsObjects() {
 
   physObjsLoaded = true;
 }
-
-// Test Physics Objects
-
-
-
 // #endregion
 
-
-
 // Game loop
-
 function updatePhysics(delta) {
   physicsWorld.stepSimulation(delta, 10);
 

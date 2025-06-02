@@ -71,7 +71,7 @@ export default class Player extends GameObject {
 
         //this.threeObj.position.add(moveDir); // Update the position of the player
         if(this.rb && this.rb.body) {
-            console.log('moveDir: ' + moveDir.x + ', ' + moveDir.y + ', ' + moveDir.z);
+            //console.log('moveDir: ' + moveDir.x + ', ' + moveDir.y + ', ' + moveDir.z);
             const currentVelocity = this.rb.body.getLinearVelocity();
             this.rb.body.setLinearVelocity(new Ammo.btVector3(
                 moveDir.x * 50,
