@@ -9,6 +9,7 @@ import GameObject from './classes/GameObject.js';
 import Player from './classes/Player.js';
 import LevelController from './classes/LevelController.js'
 import GazerEvent from './classes/GazerEvent.js';
+import { update } from 'three/examples/jsm/libs/tween.module.js';
 
 const scene = new THREE.Scene();
 const Clock = new THREE.Clock();
@@ -220,6 +221,10 @@ playerGO.addToScene(scene);
 const ambientLight = new THREE.AmbientLight(0x505050, 0.1);  // Soft white light
 scene.add(ambientLight);
 
+// Add a dim hemisphere light for general brightness
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222233, 0.001); // (skyColor, groundColor, intensity)
+scene.add(hemiLight);
+
 const lightFrequency = 0.05;
 const maxLights = 12;
 
@@ -238,11 +243,31 @@ for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
 }
   */
 
-const flashlight = new THREE.SpotLight(0xffffff, 1, 50, Math.PI / 4, 0.8);
+const flashlight = new THREE.SpotLight(0xffffff, 3, 15, Math.PI / 7, 0.5);
 flashlight.position.set(0, 0, 0);
 flashlight.target.position.set(0, 0, -1);
+let flashlightTarget = new THREE.Vector3();
+
 camera.add(flashlight);
-camera.add(flashlight.target);
+scene.add(flashlight.target);
+
+function updateFlashlight() {
+  // Get camera's world position and direction
+  const camWorldPos = new THREE.Vector3();
+  camera.getWorldPosition(camWorldPos);
+
+  const camDir = new THREE.Vector3();
+  camera.getWorldDirection(camDir);
+
+  // Desired target position (10 units ahead)
+  const desiredTarget = camWorldPos.clone().add(camDir.multiplyScalar(10));
+
+  // Lerp the flashlightTarget vector toward the desired target
+  flashlightTarget.lerp(desiredTarget, 0.1);
+
+  // Set the flashlight's target position
+  flashlight.target.position.copy(flashlightTarget);
+}
 // #endregion
 
 // Test
@@ -344,6 +369,13 @@ function animate() {
   if(ammoLoaded == true && physObjsLoaded == true) {
     updatePhysics(delta);
   }  
+
+
+
+
+
+
+  updateFlashlight();
   controls.update(delta);
   devControls.update();
   levelController.update(delta);
