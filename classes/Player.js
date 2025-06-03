@@ -3,13 +3,20 @@ import * as THREE from "three";
 import { PointerLockControls  } from "./PointerLockControls";
 
 export default class Player extends GameObject {
-    constructor(name, threeObj, document, controls) {
+    constructor(name, threeObj, document, controls, footStepSound) {
         super(name, threeObj);
         this.initializeControls(document);
-        this.moveSpeed = 0.1;
+        this.moveSpeed = 0.04;
         this.pressedKeys = new Set();
         this.controls = controls;
         this.camera = controls.object;
+
+        this.bobBool = false;
+        this.bobTime = 0;
+        this.bobAmount = 0.08;
+        this.bobSpeed = 6;
+
+        this.footStepSound = footStepSound;
     }
 
     /*
@@ -66,6 +73,7 @@ export default class Player extends GameObject {
         moveDir.addScaledVector(cameraRight, this.velocity.x);
 
         if (moveDir.length() > 0) {
+            this.bobBool = true;
             moveDir.normalize().multiplyScalar(this.moveSpeed);
         }
 
@@ -83,6 +91,41 @@ export default class Player extends GameObject {
         
         this.camera.position.copy(this.threeObj.position).add(new THREE.Vector3(0, 0, 0)); // Update the camera position to match the player
 
+
+        
+
         //console.log(`Player ${this.name} speed: ${this.velocity.length()}`);
+    }
+
+    // Slightly modified from https://youtu.be/oqKzxPMLWxo?si=718ahK_HPU8CZtEx
+    updateHeadBob(delta) {
+        if(this.bobBool) {
+            const wavelength = Math.PI;
+            const nextStep = 1 + Math.floor(((this.bobTime + 0.000001) * this.bobSpeed * 0.5)/ wavelength);
+            const nextStepTime = nextStep * wavelength / (this.bobSpeed * 0.5);
+            this.bobTime = Math.min(this.bobTime + delta, nextStepTime);
+
+            if(this.bobTime == nextStepTime && this.footStepSound && this.velocity.length() > 0) {
+                this.footStepSound.playbackRate = Math.random() * 0.4 + 0.75;
+
+                if(!this.footStepSound.isPlaying) {
+                    this.footStepSound.play();
+                } else {
+                    this.footStepSound.stop();
+                    this.footStepSound.play();
+                }
+            }
+
+            if(this.bobTime == nextStepTime) {
+                this.bobBool = false;
+            }
+        }
+
+        this.camera.position.y += Math.abs(Math.sin(this.bobTime * this.bobSpeed * 0.5)) * this.bobAmount;
+    }
+
+    update(delta) {
+        this.move();
+        this.updateHeadBob(delta);
     }
 }

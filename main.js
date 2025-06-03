@@ -10,9 +10,10 @@ import Player from './classes/Player.js';
 import LevelController from './classes/LevelController.js'
 import GazerEvent from './classes/GazerEvent.js';
 import { update } from 'three/examples/jsm/libs/tween.module.js';
+import { buffer } from 'three/tsl';
 
 const scene = new THREE.Scene();
-const Clock = new THREE.Clock();
+const clock = new THREE.Clock();
 
 // Rendering
 const renderer = new THREE.WebGLRenderer();
@@ -23,6 +24,15 @@ document.body.appendChild(renderer.domElement);
 // Cameras
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 scene.add(camera);
+
+// Audio
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+const sound = new THREE.PositionalAudio(listener);
+const footstepSound = new THREE.PositionalAudio(listener);
+const audioloader = new THREE.AudioLoader();
+
 
 // #region Dev Camera
 // Create a dev camera
@@ -210,7 +220,7 @@ fbxLoader.load("models/cube.fbx", (model) => {
 const playerGeometry = new THREE.BoxGeometry( 1, 5, 1 );
 const playerMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 const player3Obj = new THREE.Mesh( playerGeometry, playerMaterial );
-const playerGO = new Player('Player', player3Obj, document, controls);
+const playerGO = new Player('Player', player3Obj, document, controls, footstepSound);
 playerGO.threeObj.position.set(0,1,0);
 playerGO.addToScene(scene);
 // #endregion
@@ -222,7 +232,7 @@ const ambientLight = new THREE.AmbientLight(0x505050, 0.1);  // Soft white light
 scene.add(ambientLight);
 
 // Add a dim hemisphere light for general brightness
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222233, 0.001); // (skyColor, groundColor, intensity)
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222233, 0.003); // (skyColor, groundColor, intensity)
 scene.add(hemiLight);
 
 const lightFrequency = 0.05;
@@ -243,6 +253,7 @@ for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
 }
   */
 
+// #region Flashlight
 const flashlight = new THREE.SpotLight(0xffffff, 3, 15, Math.PI / 7, 0.5);
 flashlight.position.set(0, 0, 0);
 flashlight.target.position.set(0, 0, -1);
@@ -269,6 +280,8 @@ function updateFlashlight() {
   flashlight.target.position.copy(flashlightTarget);
 }
 // #endregion
+// #endregion
+
 
 // Test
 const test1geo = new THREE.BoxGeometry( 1, 1, 1 );
@@ -277,6 +290,7 @@ const test1obj = new THREE.Mesh( test1geo, test1mat );
 const test1go = new GameObject('Test1', test1obj);
 test1go.threeObj.position.set(10,20,-10);
 test1go.addToScene(scene);
+
 // #endregion
 
 // #region Physics
@@ -301,7 +315,8 @@ const margin = 0.05;
 window.addEventListener('DOMContentLoaded', async () => {
   Ammo().then((lib) => {
       Ammo = lib;
-      initPhysics();    
+      initPhysics();
+      initAudio();
   });
 });
 
@@ -326,8 +341,10 @@ function initPhysicsObjects() {
   rigidBodies.push({mesh: playerGO.threeObj, rigidBody: playerGO.rb});
   playerGO.rb.body.setAngularFactor(new Ammo.btVector3(0, 1, 0));
 
+  
   test1go.createRigidBody(physicsWorld, {x: 1, y: 1, z: 1}, "box", 1);
   rigidBodies.push({mesh: test1go.threeObj, rigidBody: test1go.rb});
+  
 
   floorGO.createRigidBody(physicsWorld, null, "BB", 0);
   rigidBodies.push({mesh: floorGO.threeObj, rigidBody: floorGO.rb});
@@ -341,10 +358,34 @@ function initPhysicsObjects() {
 }
 // #endregion
 
+// #region Audio
+// Footstep Audio: https://youtu.be/f58nbbOZd9A
+function initAudio() {
+  audioloader.load('sounds/testAudio.mp3', (buffer) => {
+    sound.setBuffer(buffer);
+    sound.setVolume(1);
+    sound.setRefDistance(1);
+  });
+
+  audioloader.load('sounds/footStep.mp3', (buffer) => { 
+    footstepSound.setBuffer(buffer);
+    footstepSound.setVolume(1);
+    footstepSound.setRefDistance(1);
+  });
+
+  test1obj.add(sound);
+
+  footstepSound.position.set(0, -2.5, 0);
+  player3Obj.add(footstepSound);
+}
+
+
+// #region Level Controller
 const levelController = new LevelController(scene, [
   new GazerEvent(scene, playerGO, [[0, 0], [0, -10]])
 ]);
 levelController.levelDone();
+// #endregion
 
 // Game loop
 function updatePhysics(delta) {
@@ -364,21 +405,26 @@ function updatePhysics(delta) {
 }
 
 function animate() {
-  const delta = Clock.getDelta();
-  playerGO.move(); // Move the player
-  if(ammoLoaded == true && physObjsLoaded == true) {
-    updatePhysics(delta);
-  }  
+  const delta = clock.getDelta();
+    if(controls.isLocked == true) {
+      playerGO.update(delta); // Move the player
+    if(ammoLoaded == true && physObjsLoaded == true) {
+      updatePhysics(delta);
+    }
 
 
-
-
-
-
-  updateFlashlight();
-  controls.update(delta);
+    updateFlashlight();
+    controls.update(delta);
+    
+    levelController.update(delta);
+  }
+  
   devControls.update();
-  levelController.update(delta);
+  if(useDevCamera) {
+    hemiLight.intensity = 1;
+  } else {
+    hemiLight.intensity = 0.003;
+  }
 	renderer.render(scene, useDevCamera ? devCamera : camera);
 }
 
