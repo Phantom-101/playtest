@@ -7,6 +7,8 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { PointerLockControls } from './classes/PointerLockControls.js';
 import GameObject from './classes/GameObject.js';
 import Player from './classes/Player.js';
+import LevelController from './classes/LevelController.js'
+import GazerEvent from './classes/GazerEvent.js';
 
 const scene = new THREE.Scene();
 const Clock = new THREE.Clock();
@@ -236,7 +238,7 @@ for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
 }
   */
 
-const flashlight = new THREE.SpotLight(0xffffff, 5, 50, Math.PI / 4, 0.5);
+const flashlight = new THREE.SpotLight(0xffffff, 1, 50, Math.PI / 4, 0.8);
 flashlight.position.set(0, 0, 0);
 flashlight.target.position.set(0, 0, -1);
 camera.add(flashlight);
@@ -314,6 +316,11 @@ function initPhysicsObjects() {
 }
 // #endregion
 
+const levelController = new LevelController(scene, [
+  new GazerEvent(scene, playerGO, [[0, 0], [0, -10]])
+]);
+levelController.levelDone();
+
 // Game loop
 function updatePhysics(delta) {
   physicsWorld.stepSimulation(delta, 10);
@@ -339,6 +346,7 @@ function animate() {
   }  
   controls.update(delta);
   devControls.update();
+  levelController.update(delta);
 	renderer.render(scene, useDevCamera ? devCamera : camera);
 }
 
