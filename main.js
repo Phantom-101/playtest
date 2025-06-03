@@ -24,7 +24,7 @@ scene.add(camera);
 // #region Dev Camera
 // Create a dev camera
 const devCamera = new THREE.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 0.1, 1000);
-devCamera.position.set(20, 20, 20);
+devCamera.position.set(0, 1, 0);
 scene.add(devCamera);
 
 // OrbitControls for dev camera
@@ -131,15 +131,34 @@ const textureLoader = new THREE.TextureLoader();
 
 // #region Map
 const mapSize = 100;
-const spacing = 20;
+const mapHeight = 5;
+const walls_data = [
+  [-1, -2, -1, 10, 0.1],
+  [1, -15, 1, 8, 0.1],
+  [-1, 10, 10, 10, 0.1],
+  [10, 10, 10, 0, 0.1],
+  [10, 0, 1, 0, 0.1],
+  [-1, -2, -8, -2, 0.1],
+  [-8, -4, -8, -10, 0.1],
+  [-8, -10, -1, -10, 0.1],
+  [-10, -2, -10, 5, 0.1],
+  [-10, 5, -1, 5, 0.1],
+  [-15, -4, -8, -4, 0.1],
+  [-15, -4, -15, 0, 0.1],
+  [-15, 0, -10, 0, 0.1],
+  [-1, -10, -1, -17, 0.1],
+  [-1, -17, 6, -17, 0.1],
+  [1, -15, 6, -15, 0.1],
+  [6, -15, 6, -17, 0.1],
+];
 
 let floor;
 let ceiling;
-let columns = [];
+let walls = [];
 
 let floorGO;
 let ceilingGO;
-let columnsGO = [];
+let wallsGO = [];
 
 fbxLoader.load("models/cube.fbx", (model) => {
   textureLoader.load("textures/concrete.jpg", (texture) => {
@@ -149,18 +168,21 @@ fbxLoader.load("models/cube.fbx", (model) => {
     receiveShadow(floor);
 
     ceiling = model.clone();
-    setCorners(ceiling, new THREE.Vector3(-mapSize, 20, -mapSize), new THREE.Vector3(mapSize, 21, mapSize));
+    setCorners(ceiling, new THREE.Vector3(-mapSize, mapHeight, -mapSize), new THREE.Vector3(mapSize, mapHeight + 1, mapSize));
     apply(ceiling, rewrap(texture, new THREE.Vector3(mapSize, mapSize)));
     receiveShadow(ceiling);
 
-    for(let i = -mapSize; i <= mapSize; i += spacing) {
-      for(let j = -mapSize; j <= mapSize; j += spacing) {
-        const column = model.clone();
-        setCorners(column, new THREE.Vector3(i - 1, 0, j - 1), new THREE.Vector3(i + 1, 20, j + 1));
-        apply(column, rewrap(texture, new THREE.Vector3(20, 2)));
-        castShadow(column);
-        columns.push(column);
-      }
+    for(const wall_data of walls_data) {
+      const x1 = Math.min(wall_data[0], wall_data[2]);
+      const z1 = Math.min(wall_data[1], wall_data[3]);
+      const x2 = Math.max(wall_data[0], wall_data[2]);
+      const z2 = Math.max(wall_data[1], wall_data[3]);
+      const expand = wall_data[4];
+      const wall = model.clone();
+      setCorners(wall, new THREE.Vector3(x1 - expand, 0, z1 - expand), new THREE.Vector3(x2 + expand, mapHeight, z2 + expand));
+      apply(wall, rewrap(texture, new THREE.Vector3(mapHeight, Math.max(x2 - x1, z2 - z1))));
+      castShadow(wall);
+      walls.push(wall);
     }
 
     // Create Map Game Objects
@@ -168,10 +190,10 @@ fbxLoader.load("models/cube.fbx", (model) => {
     floorGO.addToScene(scene);
     ceilingGO = new GameObject('Ceiling', ceiling);
     ceilingGO.addToScene(scene);
-    columns.forEach((column) => {
-      const columnGO = new GameObject('Column', column);
-      columnGO.addToScene(scene);
-      columnsGO.push(columnGO);
+    walls.forEach((wall) => {
+      const wallGO = new GameObject('Wall', wall);
+      wallGO.addToScene(scene);
+      wallsGO.push(wallGO);
     });
 
     if(ammoLoaded == true) {
@@ -186,7 +208,7 @@ const playerGeometry = new THREE.BoxGeometry( 1, 5, 1 );
 const playerMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 const player3Obj = new THREE.Mesh( playerGeometry, playerMaterial );
 const playerGO = new Player('Player', player3Obj, document, controls);
-playerGO.threeObj.position.set(10,20,0);
+playerGO.threeObj.position.set(0,1,0);
 playerGO.addToScene(scene);
 // #endregion
 
@@ -199,6 +221,7 @@ scene.add(ambientLight);
 const lightFrequency = 0.05;
 const maxLights = 12;
 
+/*
 let curLights = 0;
 for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
   for(let j = -mapSize + spacing / 2; j <= mapSize; j += spacing) {
@@ -211,6 +234,7 @@ for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
     }
   }
 }
+  */
 
 const flashlight = new THREE.SpotLight(0xffffff, 5, 50, Math.PI / 4, 0.5);
 flashlight.position.set(0, 0, 0);
@@ -281,9 +305,9 @@ function initPhysicsObjects() {
   floorGO.createRigidBody(physicsWorld, null, "BB", 0);
   rigidBodies.push({mesh: floorGO.threeObj, rigidBody: floorGO.rb});
 
-  columnsGO.forEach((columnGO) => {
-    columnGO.createRigidBody(physicsWorld, null, "BB", 0);
-    rigidBodies.push({mesh: columnGO.threeObj, rigidBody: columnGO.rb});
+  wallsGO.forEach((wallGO) => {
+    wallGO.createRigidBody(physicsWorld, null, "BB", 0);
+    rigidBodies.push({mesh: wallGO.threeObj, rigidBody: wallGO.rb});
   });
 
   physObjsLoaded = true;
