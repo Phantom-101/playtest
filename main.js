@@ -11,6 +11,7 @@ import LevelController from './classes/LevelController.js'
 import GazerEvent from './classes/GazerEvent.js';
 import { update } from 'three/examples/jsm/libs/tween.module.js';
 import { buffer } from 'three/tsl';
+import RainEvent from './classes/RainEvent.js';
 
 const scene = new THREE.Scene();
 const clock = new THREE.Clock();
@@ -385,7 +386,8 @@ function initAudio() {
 
 // #region Level Controller
 const levelController = new LevelController(scene, [
-  new GazerEvent(scene, playerGO, [[0, 0], [0, -10]])
+  new GazerEvent(scene, playerGO, [[0, 0], [0, -10]]),
+  new RainEvent(scene),
 ]);
 levelController.levelDone();
 // #endregion

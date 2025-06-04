@@ -43,11 +43,11 @@ export default class GazerEvent {
             this.timer -= delta;
             this.threeObj.position.set(this.x, this.base_y * this.timer / this.spawn_duration, this.z);
             if(this.timer <= 0) {
+                console.log("Gazer linger");
                 this.timer = this.linger_duration;
                 this.state = GazerEvent.LINGER;
             }
         } else if (this.state == GazerEvent.LINGER) {
-            console.log("Gazer linger");
             this.timer -= delta;
             const dist = Math.sqrt((this.x - this.playerGO.threeObj.position.x)**2 + (this.z - this.playerGO.threeObj.position.z)**2);
             if(dist <= 2 && this.playerGO.flashlightEnabled) {
