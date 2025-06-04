@@ -17,6 +17,8 @@ export default class Player extends GameObject {
         this.bobSpeed = 6;
 
         this.footStepSound = footStepSound;
+
+        this.flashlightEnabled = true;
     }
 
     /*
@@ -35,6 +37,9 @@ export default class Player extends GameObject {
     onKeyDown(event) {
         this.pressedKeys.add(event.which); // Add the key to the pressed keys set
         this.updateVelocity();
+        if(event.key == 'f') {
+            this.flashlightEnabled = !this.flashlightEnabled;
+        }
     }
 
     onKeyUp(event) {

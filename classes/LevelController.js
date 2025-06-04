@@ -10,6 +10,7 @@ export default class LevelController {
         this.events = events;
         this.event = null;
         this.timer = 0;
+        this.level = 0;
     }
 
     setEventsRemaining(target) {
@@ -30,7 +31,7 @@ export default class LevelController {
         } else if (this.state == LevelController.WAIT) {
             this.timer -= delta;
             if(this.timer <= 0) {
-                this.event.start();
+                this.event.start(this);
                 this.state = LevelController.EVENT;
             }
         } else if (this.state == LevelController.EVENT) {
@@ -43,10 +44,16 @@ export default class LevelController {
     }
 
     levelDone() {
+        this.level += 1;
         this.setEventsRemaining(3);
         if(this.state == LevelController.EVENT && this.event != null) {
             this.event.end();
         }
         this.state = LevelController.SELECT;
+    }
+
+    levelFailed() {
+        this.level = 0;
+        this.levelDone();
     }
 }

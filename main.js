@@ -254,7 +254,8 @@ for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
   */
 
 // #region Flashlight
-const flashlight = new THREE.SpotLight(0xffffff, 3, 15, Math.PI / 7, 0.5);
+const flashlightIntensity = 3;
+const flashlight = new THREE.SpotLight(0xffffff, flashlightIntensity, 15, Math.PI / 7, 0.5);
 flashlight.position.set(0, 0, 0);
 flashlight.target.position.set(0, 0, -1);
 let flashlightTarget = new THREE.Vector3();
@@ -278,6 +279,8 @@ function updateFlashlight() {
 
   // Set the flashlight's target position
   flashlight.target.position.copy(flashlightTarget);
+
+  flashlight.intensity = playerGO.flashlightEnabled ? flashlightIntensity : 0;
 }
 // #endregion
 // #endregion
@@ -406,13 +409,11 @@ function updatePhysics(delta) {
 
 function animate() {
   const delta = clock.getDelta();
-    if(controls.isLocked == true) {
-      playerGO.update(delta); // Move the player
+  if(controls.isLocked == true) {
+    playerGO.update(delta); // Move the player
     if(ammoLoaded == true && physObjsLoaded == true) {
       updatePhysics(delta);
     }
-
-
     updateFlashlight();
     controls.update(delta);
     

@@ -16,8 +16,9 @@ export default class GazerEvent {
         this.base_y = -5;
     }
 
-    start() {
+    start(level) {
         console.log("Gazer start");
+        this.level = level;
         this.state = GazerEvent.SPAWN;
         this.timer = this.spawn_duration;
         const map = new THREE.TextureLoader().load('textures/gazer.png');
@@ -49,8 +50,8 @@ export default class GazerEvent {
             console.log("Gazer linger");
             this.timer -= delta;
             const dist = Math.sqrt((this.x - this.playerGO.threeObj.position.x)**2 + (this.z - this.playerGO.threeObj.position.z)**2);
-            if(dist <= 2) {
-                // TODO add flashlight check
+            if(dist <= 2 && this.playerGO.flashlightEnabled) {
+                this.level.levelFailed();
                 // TODO send death message
             }
             if(this.timer <= 0) {
