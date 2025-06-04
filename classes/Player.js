@@ -3,7 +3,11 @@ import * as THREE from "three";
 import { PointerLockControls  } from "./PointerLockControls";
 
 export default class Player extends GameObject {
-    constructor(name, threeObj, document, controls, footStepSound) {
+    constructor(name, threeObj, document, controls,
+        footStepSound,
+        flashlighSoundOn,
+        flashlightSoundOff
+    ) {
         super(name, threeObj);
         this.initializeControls(document);
         this.moveSpeed = 0.04;
@@ -17,6 +21,8 @@ export default class Player extends GameObject {
         this.bobSpeed = 6;
 
         this.footStepSound = footStepSound;
+        this.flashlightSoundOn = flashlighSoundOn;
+        this.flashlightSoundOff = flashlightSoundOff;
 
         this.flashlightEnabled = true;
     }
@@ -39,6 +45,15 @@ export default class Player extends GameObject {
         this.updateVelocity();
         if(event.key == 'f') {
             this.flashlightEnabled = !this.flashlightEnabled;
+            if (this.flashlightEnabled && this.flashlightSoundOn) {
+                this.flashlightSoundOn.playbackRate = Math.random() * 0.2 + 0.9;
+                this.flashlightSoundOn.play();
+                this.flashlightSoundOff.stop();
+            } else if (!this.flashlightEnabled && this.flashlightSoundOff) {
+                this.flashlightSoundOff.playbackRate = Math.random() * 0.2 + 0.9;
+                this.flashlightSoundOff.play();
+                this.flashlightSoundOn.stop();
+            }
         }
     }
 

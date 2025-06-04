@@ -29,11 +29,14 @@ scene.add(camera);
 // Audio
 const listener = new THREE.AudioListener();
 camera.add(listener);
-
-const sound = new THREE.PositionalAudio(listener);
-const footstepSound = new THREE.PositionalAudio(listener);
 const audioloader = new THREE.AudioLoader();
 
+let ammoLoaded = false;
+
+const testSound = new THREE.PositionalAudio(listener);
+const footstepSound = new THREE.PositionalAudio(listener);
+const flashlightSoundOn = new THREE.PositionalAudio(listener);
+const flashlightSoundOff = new THREE.PositionalAudio(listener);
 
 // #region Dev Camera
 // Create a dev camera
@@ -221,7 +224,11 @@ fbxLoader.load("models/cube.fbx", (model) => {
 const playerGeometry = new THREE.BoxGeometry( 1, 5, 1 );
 const playerMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 const player3Obj = new THREE.Mesh( playerGeometry, playerMaterial );
-const playerGO = new Player('Player', player3Obj, document, controls, footstepSound);
+const playerGO = new Player('Player', player3Obj, document, controls,
+  footstepSound,
+  flashlightSoundOn,
+  flashlightSoundOff
+);
 playerGO.threeObj.position.set(0,1,0);
 playerGO.addToScene(scene);
 // #endregion
@@ -282,6 +289,7 @@ function updateFlashlight() {
   flashlight.target.position.copy(flashlightTarget);
 
   flashlight.intensity = playerGO.flashlightEnabled ? flashlightIntensity : 0;
+
 }
 // #endregion
 // #endregion
@@ -309,7 +317,7 @@ let physicsWorld;
 let transformAux1;
 let tmpTransform;
 
-let ammoLoaded = false;
+
 let physObjsLoaded = false;
 
 const rigidBodies = [];
@@ -363,26 +371,33 @@ function initPhysicsObjects() {
 // #endregion
 
 // #region Audio
-// Footstep Audio: https://youtu.be/f58nbbOZd9A
 function initAudio() {
-  audioloader.load('sounds/testAudio.mp3', (buffer) => {
-    sound.setBuffer(buffer);
-    sound.setVolume(1);
-    sound.setRefDistance(1);
-  });
+  loadAudio('sounds/testAudio.mp3', testSound)
+  loadAudio('sounds/footstep.mp3', footstepSound);
+  loadAudio('sounds/flashlightOn.mp3', flashlightSoundOn, 0.5);
+  loadAudio('sounds/flashlightOff.mp3', flashlightSoundOff, 0.5);
 
-  audioloader.load('sounds/footStep.mp3', (buffer) => { 
-    footstepSound.setBuffer(buffer);
-    footstepSound.setVolume(1);
-    footstepSound.setRefDistance(1);
-  });
+  test1obj.add(testSound);
 
-  test1obj.add(sound);
+  footstepSound.position.set(player3Obj.position.x, player3Obj.position.y-2.5, player3Obj.position.z);
+  flashlightSoundOn.position.set(player3Obj.position.x, player3Obj.position.y, player3Obj.position.z);
+  flashlightSoundOff.position.set(player3Obj.position.x, player3Obj.position.y, player3Obj.position.z);
 
-  footstepSound.position.set(0, -2.5, 0);
   player3Obj.add(footstepSound);
+  player3Obj.add(flashlightSoundOn);
+  player3Obj.add(flashlightSoundOff);
 }
 
+
+
+function loadAudio(filename, posAudio_obj, volume = 1) {
+  audioloader.load(filename, (buffer) => {
+    posAudio_obj.setBuffer(buffer);
+    posAudio_obj.setVolume(volume);
+    posAudio_obj.setRefDistance(1);
+  });
+}
+// #endregion
 
 // #region Level Controller
 const levelController = new LevelController(scene, [
