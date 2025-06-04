@@ -14,6 +14,7 @@ export default class RainEvent {
         this.rain_height = 10;
         this.rain_region = 20;
         this.max_rain = 300;
+        this.light_intensity = 0.3;
     }
 
     start(level) {
@@ -26,11 +27,14 @@ export default class RainEvent {
         map.magFilter = THREE.NearestFilter;
         this.material = new THREE.SpriteMaterial({ map: map });
         this.rain = [];
+        this.light = new THREE.AmbientLight(0xff0000, 0);
+        this.scene.add(this.light);
     }
 
     update(delta) {
         if(this.state == RainEvent.RAIN_START) {
             this.rain_limit = Math.round(this.max_rain * (1 - this.timer / this.start_duration));
+            this.light.intensity = this.light_intensity * (1 - this.timer / this.start_duration);
             this.timer -= delta;
             if(this.timer <= 0) {
                 console.log("Rain");
@@ -39,6 +43,7 @@ export default class RainEvent {
             }
         } else if (this.state == RainEvent.RAIN) {
             this.rain_limit = this.max_rain;
+            this.light.intensity = this.light_intensity;
             this.timer -= delta;
             if(this.timer <= 0) {
                 console.log("Rain ending");
@@ -47,6 +52,7 @@ export default class RainEvent {
             }
         } else if (this.state == RainEvent.RAIN_END) {
             this.rain_limit = Math.round(this.max_rain * this.timer / this.start_duration);
+            this.light.intensity = this.light_intensity * Math.max(this.timer / this.start_duration, 0);
             this.timer -= delta;
             if(this.timer <= 0 && this.rain.length == 0) {
                 this.state = RainEvent.END;
@@ -81,6 +87,8 @@ export default class RainEvent {
 
     end() {
         console.log("Rain end");
+        this.scene.remove(this.light);
+        this.light = null;
         this.material.dispose();
         this.material = null;
         while(this.rain.length > 0) {
