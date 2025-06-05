@@ -60,6 +60,12 @@ export default class SewerLevel {
         go.createRigidBody(this.physicsWorld, null, "mesh", 0);
     }
 
+
+    /* TO USE OR ACCESS A MODEL const group = this.prefabs["map_noDoors"];
+        the gets a reference to the group map_noDoors which is the entire map with no doors.
+        This is a special case since the mesh is so big i had to vibe code it to work so it won't access the RB
+    */
+
     loadModels() {
         return new Promise((resolve, reject) => {
             this.gltfLoader.load('models/sewerMapGLTF/scene.gltf', (gltf) => {
