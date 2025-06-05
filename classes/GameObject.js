@@ -71,6 +71,9 @@ export default class GameObject {
                 this.threeObj.position.copy(bbcenter);
                 this.rb.createBox(mass, bbcenter, this.threeObj.quaternion, bbsize);
                 break;
+            case "mesh":
+                this.rb.createMesh(this.threeObj.position, this.threeObj.quaternion, this.threeObj);
+                break;
             default:
                 console.error("Unknown shape type: " + shape);
                 break;
