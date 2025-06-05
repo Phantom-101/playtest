@@ -12,6 +12,8 @@ import GazerEvent from './classes/GazerEvent.js';
 import { update } from 'three/examples/jsm/libs/tween.module.js';
 import { buffer } from 'three/tsl';
 import RainEvent from './classes/RainEvent.js';
+import SewerLevel from './classes/SewerLevel.js'; 
+import init from 'three/examples/jsm/offscreen/scene.js';
 import TextController from './classes/TextController.js';
 import SewerLevel from './classes/SewerLevel.js'; 
 import init from 'three/examples/jsm/offscreen/scene.js';
@@ -33,8 +35,6 @@ scene.add(camera);
 const listener = new THREE.AudioListener();
 camera.add(listener);
 const audioloader = new THREE.AudioLoader();
-
-let ammoLoaded = false;
 
 const testSound = new THREE.PositionalAudio(listener);
 const footstepSound = new THREE.PositionalAudio(listener);
@@ -94,54 +94,6 @@ controls.addEventListener( 'unlock', function () {
 });
 // #endregion
 
-// #region Helper Functions
-function rewrap(texture, repeat) {
-  const newTexture = texture.clone();
-  newTexture.wrapS = THREE.RepeatWrapping;
-  newTexture.wrapT = THREE.RepeatWrapping;
-  newTexture.repeat.copy(repeat);
-  return newTexture;
-}
-
-function apply(object, texture) {
-  const material = new THREE.MeshPhongMaterial({ map: texture });
-  object.traverse((obj) => {
-    if(obj.isMesh) {
-      obj.material = material;
-    }
-  });
-}
-
-function castShadow(object) {
-  object.traverse((obj) => {
-    if(obj.isMesh || obj.isLight) {
-      obj.castShadow = true;
-    }
-  });
-}
-
-function receiveShadow(object) {
-  object.traverse((obj) => {
-    if(obj.isMesh) {
-      obj.receiveShadow = true;
-    }
-  });
-}
-
-function setCorners(object, min, max) {
-  object.position.copy(min.clone().add(max).divideScalar(2));
-  object.scale.copy(max.clone().sub(min));
-}
-
-function rad(deg) {
-  return deg * Math.PI / 180;
-}
-
-function rand(min, max) {
-  return Math.random() * (max - min) + min;
-}
-// #endregion
-
 // #region Player
 const radius = 0.3;
 const length = 1.4;
@@ -164,42 +116,12 @@ textController.showText("You awake in an empty, dark hallway.");
 // #endregion
 
 // #region Objects
-// Models
-const fbxLoader = new FBXLoader();
-const textureLoader = new THREE.TextureLoader();
-
-// #region Game Objects
-
 // #region Map
 const mapSize = 100;
-const mapHeight = 5;
-const walls_data = [
-  [-1, -2, -1, 10, 0.1],
-  [1, -15, 1, 8, 0.1],
-  [-1, 10, 10, 10, 0.1],
-  [10, 10, 10, 0, 0.1],
-  [10, 0, 1, 0, 0.1],
-  [-1, -2, -8, -2, 0.1],
-  [-8, -4, -8, -10, 0.1],
-  [-8, -10, -1, -10, 0.1],
-  [-10, -2, -10, 5, 0.1],
-  [-10, 5, -1, 5, 0.1],
-  [-15, -4, -8, -4, 0.1],
-  [-15, -4, -15, 0, 0.1],
-  [-15, 0, -10, 0, 0.1],
-  [-1, -10, -1, -17, 0.1],
-  [-1, -17, 6, -17, 0.1],
-  [1, -15, 6, -15, 0.1],
-  [6, -15, 6, -17, 0.1],
-];
 
 let floor;
-let ceiling;
-let walls = [];
 
 let floorGO;
-let ceilingGO;
-let wallsGO = [];
 
 function loadMap() {
   return new Promise((resolve, reject) => {
@@ -218,50 +140,6 @@ function loadMap() {
       }, undefined, reject);
     }, undefined, reject);
   });
-  /*
-  fbxLoader.load("models/cube.fbx", (model) => {
-    textureLoader.load("textures/concrete.jpg", (texture) => {
-      floor = model.clone();
-      setCorners(floor, new THREE.Vector3(-mapSize, -1, -mapSize), new THREE.Vector3(mapSize, 0, mapSize));
-      apply(floor, rewrap(texture, new THREE.Vector3(mapSize, mapSize)));
-      receiveShadow(floor);
-
-      
-      ceiling = model.clone();
-      setCorners(ceiling, new THREE.Vector3(-mapSize, mapHeight, -mapSize), new THREE.Vector3(mapSize, mapHeight + 1, mapSize));
-      apply(ceiling, rewrap(texture, new THREE.Vector3(mapSize, mapSize)));
-      receiveShadow(ceiling);
-      
-
-      for(const wall_data of walls_data) {
-        const x1 = Math.min(wall_data[0], wall_data[2]);
-        const z1 = Math.min(wall_data[1], wall_data[3]);
-        const x2 = Math.max(wall_data[0], wall_data[2]);
-        const z2 = Math.max(wall_data[1], wall_data[3]);
-        const expand = wall_data[4];
-        const wall = model.clone();
-        setCorners(wall, new THREE.Vector3(x1 - expand, 0, z1 - expand), new THREE.Vector3(x2 + expand, mapHeight, z2 + expand));
-        apply(wall, rewrap(texture, new THREE.Vector3(mapHeight, Math.max(x2 - x1, z2 - z1))));
-        castShadow(wall);
-        walls.push(wall);
-      }
-      
-
-      // Create Map Game Objects
-      floorGO = new GameObject('Floor', floor);
-      floorGO.addToScene(scene);
-      /*
-      ceilingGO = new GameObject('Ceiling', ceiling);
-      ceilingGO.addToScene(scene);
-      walls.forEach((wall) => {
-        const wallGO = new GameObject('Wall', wall);
-        wallGO.addToScene(scene);
-        wallsGO.push(wallGO);
-      });
-      
-    });
-  });
-  */
 }
   
 
@@ -269,12 +147,7 @@ function loadMap() {
 
 // #endregion
 
-const layout1 = [];
-let sewerLevel = new SewerLevel(scene, layout1, playerGO);
-
-
-
-
+let sewerLevel = new SewerLevel(scene, playerGO);
 // #endregion
 
 // #region Lights
@@ -284,23 +157,6 @@ scene.add(ambientLight);
 // Add a dim hemisphere light for general brightness
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222233, 0.003); // (skyColor, groundColor, intensity)
 scene.add(hemiLight);
-
-/*
-const lightFrequency = 0.05;
-const maxLights = 12;
-let curLights = 0;
-for(let i = -mapSize + spacing / 2; i <= mapSize; i += spacing) {
-  for(let j = -mapSize + spacing / 2; j <= mapSize; j += spacing) {
-    if(curLights < maxLights && Math.random() <= lightFrequency) {
-      const pointLight = new THREE.PointLight(0xffffff, rand(50, 100), 100);
-      pointLight.position.set(i, rand(5, 15), j); // Position the light
-      castShadow(pointLight);
-      scene.add(pointLight);
-      curLights++;
-    }
-  }
-}
-  */
 
 // #region Flashlight
 const flashlightIntensity = 3;
@@ -335,21 +191,11 @@ function updateFlashlight() {
 // #endregion
 // #endregion
 
-
-// Test
-const test1geo = new THREE.BoxGeometry( 1, 1, 1 );
-const test1mat = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-const test1obj = new THREE.Mesh( test1geo, test1mat );
-const test1go = new GameObject('Test1', test1obj);
-test1go.threeObj.position.set(10,20,-10);
-test1go.addToScene(scene);
-
 // #endregion
 
 // #region Physics
-// #region Init Physics + variables
+// #region init Physics and Physics variables
 const gravityConstant = - 9.8;
-
 let transformAux1;
 let tmpTransform;
 
@@ -382,7 +228,7 @@ function initPhysics() {
 }
 // #endregion
 
-// Init Physics Objects
+// Initialize Physics Objects
 function initPhysicsObjects() {
   const radius = 0.3;
   const height = 1.4;
@@ -394,22 +240,10 @@ function initPhysicsObjects() {
   rigidBodies.push({mesh: playerGO.threeObj, rigidBody: playerGO.rb});
   playerGO.rb.body.setAngularFactor(new Ammo.btVector3(0, 1, 0));
 
-  
-  test1go.createRigidBody(physicsWorld, {x: 1, y: 1, z: 1}, "box", 1);
-  rigidBodies.push({mesh: test1go.threeObj, rigidBody: test1go.rb});
-  
-  
   floorGO.createRigidBody(physicsWorld, null, "BB", 0);
   rigidBodies.push({mesh: floorGO.threeObj, rigidBody: floorGO.rb});
 
   sewerLevel.initPhysicsForModelsByGroup();
-
-  /*
-  wallsGO.forEach((wallGO) => {
-    wallGO.createRigidBody(physicsWorld, null, "BB", 0);
-    rigidBodies.push({mesh: wallGO.threeObj, rigidBody: wallGO.rb});
-  });
-  */
 }
 // #endregion
 
@@ -462,8 +296,6 @@ async function startGame() {
 
   await initPhysicsObjects();
   console.log("Initialized Physics Objects");
-
-  
 
   renderer.setAnimationLoop(animate);
 }
