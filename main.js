@@ -12,6 +12,7 @@ import GazerEvent from './classes/GazerEvent.js';
 import { update } from 'three/examples/jsm/libs/tween.module.js';
 import { buffer } from 'three/tsl';
 import RainEvent from './classes/RainEvent.js';
+import TextController from './classes/TextController.js';
 
 const scene = new THREE.Scene();
 const clock = new THREE.Clock();
@@ -139,6 +140,31 @@ function rand(min, max) {
 }
 // #endregion
 
+// #region Player
+const playerGeometry = new THREE.BoxGeometry( 1, 5, 1 );
+const playerMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+const player3Obj = new THREE.Mesh( playerGeometry, playerMaterial );
+const playerGO = new Player('Player', player3Obj, document, controls,
+  footstepSound,
+  flashlightSoundOn,
+  flashlightSoundOff
+);
+playerGO.threeObj.position.set(0,1,0);
+playerGO.addToScene(scene);
+// #endregion
+
+// #region Text Controller
+const textController = new TextController(document);
+textController.showText("You awake in an empty, dark hallway.");
+// #endregion
+
+// #region Level Controller
+const levelController = new LevelController(scene, playerGO, textController, [
+  new GazerEvent([[0, 0], [0, -10]]),
+  //new RainEvent(),
+]);
+// #endregion
+
 // #region Objects
 // Models
 const fbxLoader = new FBXLoader();
@@ -215,22 +241,10 @@ fbxLoader.load("models/cube.fbx", (model) => {
 
     if(ammoLoaded == true) {
       initPhysicsObjects();
+      levelController.levelDone();
     }
   });
 });
-// #endregion
-
-// #region Player
-const playerGeometry = new THREE.BoxGeometry( 1, 5, 1 );
-const playerMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-const player3Obj = new THREE.Mesh( playerGeometry, playerMaterial );
-const playerGO = new Player('Player', player3Obj, document, controls,
-  footstepSound,
-  flashlightSoundOn,
-  flashlightSoundOff
-);
-playerGO.threeObj.position.set(0,1,0);
-playerGO.addToScene(scene);
 // #endregion
 
 // #endregion
@@ -397,14 +411,6 @@ function loadAudio(filename, posAudio_obj, volume = 1) {
     posAudio_obj.setRefDistance(1);
   });
 }
-// #endregion
-
-// #region Level Controller
-const levelController = new LevelController(scene, [
-  new GazerEvent(scene, playerGO, [[0, 0], [0, -10]]),
-  new RainEvent(scene),
-]);
-levelController.levelDone();
 // #endregion
 
 // Game loop

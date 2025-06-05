@@ -3,8 +3,10 @@ export default class LevelController {
     static WAIT = 1;
     static EVENT = 2;
 
-    constructor(scene, events) {
+    constructor(scene, playerGO, textController, events) {
         this.scene = scene;
+        this.playerGO = playerGO;
+        this.textController = textController;
         this.state = LevelController.SELECT;
         this.events_remaining = 0;
         this.events = events;
@@ -23,7 +25,7 @@ export default class LevelController {
                 this.events_remaining -= 1;
                 this.event = this.events[Math.floor(Math.random() * this.events.length)];
                 if(this.event != null) {
-                    console.log("Scheduled new event");
+                    this.textController.showText("It feels like something is about to happen...");
                     this.timer = Math.random() * 20 + 20;
                     this.state = LevelController.WAIT;
                 }
@@ -44,6 +46,7 @@ export default class LevelController {
     }
 
     levelDone() {
+        this.playerGO.resetPosition();
         this.level += 1;
         this.setEventsRemaining(3);
         if(this.state == LevelController.EVENT && this.event != null) {
@@ -53,6 +56,7 @@ export default class LevelController {
     }
 
     levelFailed() {
+        this.playerGO.resetPosition();
         this.level = 0;
         this.levelDone();
     }

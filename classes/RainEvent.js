@@ -6,8 +6,7 @@ export default class RainEvent {
     static RAIN_END = 2;
     static END = 3;
 
-    constructor(scene) {
-        this.scene = scene;
+    constructor() {
         this.start_duration = 15;
         this.rain_duration = 60;
         this.end_duration = 15;
@@ -18,7 +17,6 @@ export default class RainEvent {
     }
 
     start(level) {
-        console.log("Rain start");
         this.level = level;
         this.state = RainEvent.RAIN_START;
         this.timer = this.start_duration;
@@ -28,7 +26,9 @@ export default class RainEvent {
         this.material = new THREE.SpriteMaterial({ map: map });
         this.rain = [];
         this.light = new THREE.AmbientLight(0xff0000, 0);
-        this.scene.add(this.light);
+        this.level.scene.add(this.light);
+        this.level.textController.showText("Is it... raining?");
+        this.level.textController.showUnique("RAIN_LORE", "This strange substance is viscous, but otherwise harmless. A red haze fills the air.");
     }
 
     update(delta) {
@@ -37,7 +37,6 @@ export default class RainEvent {
             this.light.intensity = this.light_intensity * (1 - this.timer / this.start_duration);
             this.timer -= delta;
             if(this.timer <= 0) {
-                console.log("Rain");
                 this.state = RainEvent.RAIN;
                 this.timer = this.rain_duration;
             }
@@ -46,9 +45,9 @@ export default class RainEvent {
             this.light.intensity = this.light_intensity;
             this.timer -= delta;
             if(this.timer <= 0) {
-                console.log("Rain ending");
                 this.state = RainEvent.RAIN_END;
                 this.timer = this.end_duration;
+                this.level.textController.showText("It seems the rain is dissipating.");
             }
         } else if (this.state == RainEvent.RAIN_END) {
             this.rain_limit = Math.round(this.max_rain * this.timer / this.start_duration);
@@ -64,7 +63,7 @@ export default class RainEvent {
             sprite.position.set((Math.random() - 0.5) * 2 * this.rain_region, this.rain_height, (Math.random() - 0.5) * 2 * this.rain_region);
             sprite.rain_velocity = [(Math.random() - 0.5), (Math.random() - 0.5)];
             this.rain.push(sprite);
-            this.scene.add(sprite);
+            this.level.scene.add(sprite);
         }
         let index = 0;
         while(index < this.rain.length) {
@@ -74,7 +73,7 @@ export default class RainEvent {
                 this.rain[index] = this.rain[this.rain.length - 1];
                 this.rain[this.rain.length - 1] = sprite;
                 this.rain.pop();
-                this.scene.remove(sprite);
+                this.level.scene.remove(sprite);
             } else {
                 index += 1;
             }
@@ -86,13 +85,12 @@ export default class RainEvent {
     }
 
     end() {
-        console.log("Rain end");
-        this.scene.remove(this.light);
+        this.level.scene.remove(this.light);
         this.light = null;
         this.material.dispose();
         this.material = null;
         while(this.rain.length > 0) {
-            this.scene.remove(this.rain[this.rain.length - 1]);
+            this.level.scene.remove(this.rain[this.rain.length - 1]);
             this.rain.pop();
         }
     }

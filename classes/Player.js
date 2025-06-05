@@ -27,6 +27,15 @@ export default class Player extends GameObject {
         this.flashlightEnabled = true;
     }
 
+    resetPosition() {
+        const transform = new Ammo.btTransform();
+        transform.setIdentity();
+        transform.setOrigin(new Ammo.btVector3(0, 1, 0));
+        this.rb.body.setWorldTransform(transform);
+        this.rb.body.getMotionState().setWorldTransform(transform);
+        Ammo.destroy(transform);
+    }
+
     /*
     * Initialize event listeners for keyboard controls
     */
