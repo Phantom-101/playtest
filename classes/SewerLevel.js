@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import RigidBody from './RigidBody';
-import GameObject from './GameObject';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
-import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
+
+import RigidBody from './RigidBody';
+import GameObject from './GameObject';
 
 export default class SewerLevel {
     constructor(scene, playerGO, physicsWorld) {
@@ -45,7 +45,7 @@ export default class SewerLevel {
             }
         });
 
-        if (geometries.length === 0) {
+        if (geometries.length == 0) {
             console.warn(`No meshes found in group "${groupName}" for physics.`);
             return;
         }
@@ -58,11 +58,6 @@ export default class SewerLevel {
         // Create a single static mesh collider for the whole group
         const go = new GameObject(groupName + "_merged", mergedMesh);
         go.createRigidBody(this.physicsWorld, null, "mesh", 0);
-
-        // Only add mergedMesh to the scene if you want to debug collisions
-        // this.scene.add(mergedMesh); // For debugging only
-
-        // The original group (with all its meshes and textures) stays in the scene for rendering
     }
 
     loadModels() {
@@ -70,7 +65,7 @@ export default class SewerLevel {
             this.gltfLoader.load('models/sewerMapGLTF/scene.gltf', (gltf) => {
                 gltf.scene.traverse((child) => {
                     if(child.name) {
-                        console.log(`Prefab: ${child.name} (${child.type})`);
+                        //console.log(`Prefab: ${child.name} (${child.type})`);
                         this.prefabs[child.name] = child;
                     }
                 });

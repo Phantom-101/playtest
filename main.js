@@ -1,23 +1,33 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
-//import Ammo from 'ammo.js';
 
 // This is a modified version of the PointerLockControls from three.js
 import { PointerLockControls } from './classes/PointerLockControls.js';
 import GameObject from './classes/GameObject.js';
 import Player from './classes/Player.js';
 import LevelController from './classes/LevelController.js'
-import GazerEvent from './classes/GazerEvent.js';
-import { update } from 'three/examples/jsm/libs/tween.module.js';
-import { buffer } from 'three/tsl';
-import RainEvent from './classes/RainEvent.js';
-import SewerLevel from './classes/SewerLevel.js'; 
-import init from 'three/examples/jsm/offscreen/scene.js';
 import TextController from './classes/TextController.js';
-import SewerLevel from './classes/SewerLevel.js'; 
-import init from 'three/examples/jsm/offscreen/scene.js';
 
+// Enemy Event Classes
+import GazerEvent from './classes/GazerEvent.js';
+import RainEvent from './classes/RainEvent.js';
+
+// Map Object Class
+import SewerLevel from './classes/SewerLevel.js';
+
+//IDK
+//import init from 'three/examples/jsm/offscreen/scene.js';
+
+
+
+
+
+
+
+
+
+
+// Scene Setup
 const scene = new THREE.Scene();
 const clock = new THREE.Clock();
 
@@ -27,21 +37,21 @@ renderer.shadowMap.enabled = true;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Cameras
+
+
+
+
+
+
+
+
+
+// #region Cameras
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.21, 1000);
 scene.add(camera);
 
-// Audio
-const listener = new THREE.AudioListener();
-camera.add(listener);
-const audioloader = new THREE.AudioLoader();
-
-const testSound = new THREE.PositionalAudio(listener);
-const footstepSound = new THREE.PositionalAudio(listener);
-const flashlightSoundOn = new THREE.PositionalAudio(listener);
-const flashlightSoundOff = new THREE.PositionalAudio(listener);
-
-// #region Dev Camera
+// Dev Camera
+// #region 
 // Create a dev camera
 const devCamera = new THREE.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 0.1, 1000);
 devCamera.position.set(0, 1, 0);
@@ -69,12 +79,14 @@ window.addEventListener('keydown', (e) => {
 });
 // #endregion
 
-// #region Controls and Locking
+// Controls and Locking
 camera.position.set(0, 5, 10);
 const controls = new PointerLockControls( camera, document.body );
 const blocker = document.getElementById( 'blocker' );
 const instructions = document.getElementById( 'instructions' );
 
+//Event Listeners
+// #region
 instructions.addEventListener( 'click', function () {
   if (!useDevCamera) {
     controls.lock();
@@ -94,11 +106,46 @@ controls.addEventListener( 'unlock', function () {
 });
 // #endregion
 
-// #region Player
+// #endregion
+
+
+
+
+
+
+
+
+
+
+// #region Audio Objects
+const listener = new THREE.AudioListener();
+camera.add(listener);
+const audioloader = new THREE.AudioLoader();
+
+const testSound = new THREE.PositionalAudio(listener);
+const footstepSound = new THREE.PositionalAudio(listener);
+const flashlightSoundOn = new THREE.PositionalAudio(listener);
+const flashlightSoundOff = new THREE.PositionalAudio(listener);
+// #endregion
+
+
+
+
+
+
+
+
+
+
+// #region GameObjs
+
+// Player
+// #region
 const radius = 0.3;
 const length = 1.4;
 const playerGeometry = new THREE.CapsuleGeometry(radius, length, 8, 16);
 playerGeometry.translate(0, 0, 0);
+
 const playerMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 const player3Obj = new THREE.Mesh( playerGeometry, playerMaterial );
 const playerGO = new Player('Player', player3Obj, document, controls,
@@ -110,45 +157,18 @@ playerGO.threeObj.position.set(0,3,0);
 playerGO.addToScene(scene);
 // #endregion
 
-// #region Text Controller
-const textController = new TextController(document);
-textController.showText("You awake in an empty, dark hallway.");
-// #endregion
-
-// #region Objects
-// #region Map
-const mapSize = 100;
-
-let floor;
-
-let floorGO;
-
-function loadMap() {
-  return new Promise((resolve, reject) => {
-    fbxLoader.load("models/cube.fbx", (model) => {
-      textureLoader.load("textures/concrete.jpg", (texture) => {
-        floor = model.clone();
-        setCorners(floor, new THREE.Vector3(-mapSize, -1, -mapSize), new THREE.Vector3(mapSize, 0, mapSize));
-        apply(floor, rewrap(texture, new THREE.Vector3(mapSize, mapSize)));
-        receiveShadow(floor);
-
-        // Create Map Game Objects
-        floorGO = new GameObject('Floor', floor);
-        floorGO.addToScene(scene);
-
-        resolve(); // <-- Only resolve after floorGO is ready
-      }, undefined, reject);
-    }, undefined, reject);
-  });
-}
-  
-
-
-
-// #endregion
-
+// Sewer Level
 let sewerLevel = new SewerLevel(scene, playerGO);
 // #endregion
+
+
+
+
+
+
+
+
+
 
 // #region Lights
 const ambientLight = new THREE.AmbientLight(0x505050, 0.1);  // Soft white light
@@ -158,7 +178,8 @@ scene.add(ambientLight);
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222233, 0.003); // (skyColor, groundColor, intensity)
 scene.add(hemiLight);
 
-// #region Flashlight
+// FLASHLIGHT
+// #region
 const flashlightIntensity = 3;
 const flashlight = new THREE.SpotLight(0xffffff, flashlightIntensity, 15, Math.PI / 7, 0.5);
 flashlight.position.set(0, 0, 0);
@@ -191,10 +212,19 @@ function updateFlashlight() {
 // #endregion
 // #endregion
 
-// #endregion
+
+
+
+
+
+
+
+
 
 // #region Physics
-// #region init Physics and Physics variables
+
+// init Physics, Physics Loop, and Physics variables
+// #region 
 const gravityConstant = - 9.8;
 let transformAux1;
 let tmpTransform;
@@ -224,11 +254,26 @@ function initPhysics() {
   physicsWorld.getWorldInfo().set_m_gravity( new Ammo.btVector3( 0, gravityConstant, 0 ) );
   transformAux1 = new Ammo.btTransform();
   tmpTransform = new Ammo.btTransform();
-  ammoLoaded = true;
+}
+
+function updatePhysics(delta) {
+  physicsWorld.stepSimulation(delta, 10);
+
+  // Update Rigid Bodies
+  for (let i = 0; i < rigidBodies.length; ++i) {
+    rigidBodies[i].rigidBody.motionState.getWorldTransform(tmpTransform);
+    const pos = tmpTransform.getOrigin();
+    const quat = tmpTransform.getRotation();
+    const pos3 = new THREE.Vector3(pos.x(), pos.y(), pos.z());
+    const quat3 = new THREE.Quaternion(quat.x(), quat.y(), quat.z(), quat.w());
+
+    rigidBodies[i].mesh.position.copy(pos3);
+    rigidBodies[i].mesh.quaternion.copy(quat3);
+  }
 }
 // #endregion
 
-// Initialize Physics Objects
+// Initialize Physics Objects (All RBs should be initialized here)
 function initPhysicsObjects() {
   const radius = 0.3;
   const height = 1.4;
@@ -240,17 +285,24 @@ function initPhysicsObjects() {
   rigidBodies.push({mesh: playerGO.threeObj, rigidBody: playerGO.rb});
   playerGO.rb.body.setAngularFactor(new Ammo.btVector3(0, 1, 0));
 
-  floorGO.createRigidBody(physicsWorld, null, "BB", 0);
-  rigidBodies.push({mesh: floorGO.threeObj, rigidBody: floorGO.rb});
-
   sewerLevel.initPhysicsForModelsByGroup();
 }
 // #endregion
 
-// #region Audio
-function attachAudio() { 
-  test1obj.add(testSound);
 
+
+
+
+
+
+
+
+
+
+// #region Other Audio
+
+// Attach Audio to ThreeObj Meshes Here
+function attachAudio() {
   footstepSound.position.set(player3Obj.position.x, player3Obj.position.y-2.5, player3Obj.position.z);
   flashlightSoundOn.position.set(player3Obj.position.x, player3Obj.position.y, player3Obj.position.z);
   flashlightSoundOff.position.set(player3Obj.position.x, player3Obj.position.y, player3Obj.position.z);
@@ -260,6 +312,7 @@ function attachAudio() {
   player3Obj.add(flashlightSoundOff);
 }
 
+// Load Audio Files
 function loadAudio(filename, posAudio_obj, volume = 1) {
   return new Promise((resolve, reject) => {
     audioloader.load(filename, (buffer) => {
@@ -273,15 +326,48 @@ function loadAudio(filename, posAudio_obj, volume = 1) {
 }
 // #endregion
 
-// #region Level Controller
-const levelController = new LevelController(scene, [
-  new GazerEvent(scene, playerGO, [[0, 0], [0, -10]]),
-  new RainEvent(scene),
-]);
-levelController.levelDone();
+
+
+
+
+
+
+
+
+
+// #region Text Controller
+const textController = new TextController(document);
+textController.showText("You awake in an empty, dark hallway.");
 // #endregion
 
+
+
+
+
+
+
+
+
+
+// #region Level Controller
+const levelController = new LevelController(scene, playerGO,
+  [new GazerEvent(scene, playerGO, [[0, 0], [0, -10]]), new RainEvent(scene)],
+  textController
+);
+// #endregion
+
+
+
+
+
+
+
+
+
+
+
 // #region Loaders
+// Runs at the start of the game or when DOMContent is Loaded
 async function startGame() {
   await loadAllAssets();
   console.log("All assets loaded");
@@ -300,6 +386,7 @@ async function startGame() {
   renderer.setAnimationLoop(animate);
 }
 
+// Use to load all assets/files
 async function loadAllAssets() {
   console.log("Loading Audio");
   await loadAudio('sounds/testAudio.mp3', testSound);  
@@ -312,8 +399,6 @@ async function loadAllAssets() {
   console.log("Audio Loaded");
   
   console.log("Loading Models");
-  await loadMap();
-  console.log("       Map Loaded");
 
   await sewerLevel.loadModels();
   console.log("       Sewer Models Loaded");
@@ -323,23 +408,18 @@ async function loadAllAssets() {
 window.addEventListener('DOMContentLoaded', startGame);
 // #endregion
 
-// Game loop
-function updatePhysics(delta) {
-  physicsWorld.stepSimulation(delta, 10);
 
-  // Update Rigid Bodies
-  for (let i = 0; i < rigidBodies.length; ++i) {
-    rigidBodies[i].rigidBody.motionState.getWorldTransform(tmpTransform);
-    const pos = tmpTransform.getOrigin();
-    const quat = tmpTransform.getRotation();
-    const pos3 = new THREE.Vector3(pos.x(), pos.y(), pos.z());
-    const quat3 = new THREE.Quaternion(quat.x(), quat.y(), quat.z(), quat.w());
 
-    rigidBodies[i].mesh.position.copy(pos3);
-    rigidBodies[i].mesh.quaternion.copy(quat3);
-  }
-}
 
+
+
+
+
+
+
+
+scene.fog = new THREE.FogExp2(0x222222, 0.07);
+// #region Main Loop
 function animate() {
   const delta = clock.getDelta();
   if(controls.isLocked == true) {

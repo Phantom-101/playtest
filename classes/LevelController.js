@@ -3,7 +3,7 @@ export default class LevelController {
     static WAIT = 1;
     static EVENT = 2;
 
-    constructor(scene, playerGO, textController, events) {
+    constructor(scene, playerGO, events, textController) {
         this.scene = scene;
         this.playerGO = playerGO;
         this.textController = textController;

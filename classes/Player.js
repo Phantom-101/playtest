@@ -27,26 +27,15 @@ export default class Player extends GameObject {
         this.flashlightEnabled = true;
     }
 
-    resetPosition() {
-        const transform = new Ammo.btTransform();
-        transform.setIdentity();
-        transform.setOrigin(new Ammo.btVector3(0, 1, 0));
-        this.rb.body.setWorldTransform(transform);
-        this.rb.body.getMotionState().setWorldTransform(transform);
-        Ammo.destroy(transform);
-    }
-
     /*
     * Initialize event listeners for keyboard controls
     */
-    initializeControls(document) {
-        
+    initializeControls(document) {        
         this.onKeyDown = this.onKeyDown.bind(this);
         document.addEventListener("keydown", this.onKeyDown, false);
 
         this.onKeyUp = this.onKeyUp.bind(this);        
-        document.addEventListener("keyup", this.onKeyUp, false);
-        
+        document.addEventListener("keyup", this.onKeyUp, false);        
     }
 
     onKeyDown(event) {
@@ -71,6 +60,25 @@ export default class Player extends GameObject {
         this.updateVelocity();
     }
 
+
+
+
+
+
+    resetPosition() {
+        const transform = new Ammo.btTransform();
+        transform.setIdentity();
+        transform.setOrigin(new Ammo.btVector3(0, 1, 0));
+        this.rb.body.setWorldTransform(transform);
+        this.rb.body.getMotionState().setWorldTransform(transform);
+        Ammo.destroy(transform);
+    }
+
+
+
+
+
+
     updateVelocity() {
         // Reset velocity
         this.velocity.set(0, 0, 0);
@@ -88,7 +96,7 @@ export default class Player extends GameObject {
         if (this.pressedKeys.has(83)) { // 'S' key
             this.velocity.z -= this.moveSpeed;
         }
-    }
+    }    
 
     move() {
         const cameraDir = this.controls.getDirection(new THREE.Vector3());
