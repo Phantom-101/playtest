@@ -21,11 +21,12 @@ export default class SewerLevel {
         this.radioPoints = 0;
     }
 
-    initPhysicsForModelsByGroup() {
+    async initPhysicsForModelsByGroup() {
         if(this.physicsWorld) {
             const mapGroup = this.prefabs["map_noDoors"];
             if(mapGroup) {
-                this.makeRBforMap("map_noDoors");
+                await this.makeRBforMap("map_noDoors");
+                console.log("Built map_noDoors");
             } else {
                 console.warn("map_noDoors group not found!")
             }
@@ -158,7 +159,7 @@ export default class SewerLevel {
         const mesh = go.threeObj;
         const startRotation = mesh.rotation.y;
         let endRotation = startRotation;
-        const duration = 30; // seconds
+        const duration = 3; // seconds
 
         if (groupName == "Start_Doors") {
             endRotation -= Math.PI / 2 + Math.PI / 4;

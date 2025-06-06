@@ -6,7 +6,9 @@ export default class Player extends GameObject {
     constructor(name, threeObj, document, controls,
         footStepSound,
         flashlighSoundOn,
-        flashlightSoundOff
+        flashlightSoundOff,
+        sewerAmbient,
+        scene
     ) {
         super(name, threeObj);
         this.initializeControls(document);
@@ -23,11 +25,13 @@ export default class Player extends GameObject {
         this.footStepSound = footStepSound;
         this.flashlightSoundOn = flashlighSoundOn;
         this.flashlightSoundOff = flashlightSoundOff;
+        this.sewerAmbient = sewerAmbient;
 
         this.flashlightEnabled = true;
 
         this.playerBB = new THREE.Box3().setFromObject(this.threeObj);
         this.threeObj.visible = false;
+        this.scene = scene;
     }
 
     /*
@@ -131,9 +135,6 @@ export default class Player extends GameObject {
         
         this.camera.position.copy(this.threeObj.position).add(new THREE.Vector3(0, 0.72, 0)); // Update the camera position to match the player
 
-
-        
-
         //console.log(`Player ${this.name} speed: ${this.velocity.length()}`);
     }
 
@@ -168,5 +169,29 @@ export default class Player extends GameObject {
         this.move();
         this.updateHeadBob(delta);
         this.playerBB.setFromObject(this.threeObj);
+        if(this.threeObj.position.x > 130) {
+            this.gameEnd();
+        }
+        // In your update or animate loop
+        const x = this.threeObj.position.x; // or playerGO.threeObj.position.x
+        const fadeStart = -130;
+        const fadeEnd = -116;
+
+        // Clamp t between 0 (full fog) and 1 (no fog)
+        let t = (x - fadeStart) / (fadeEnd - fadeStart);
+        t = Math.max(0, Math.min(1, t));
+
+        // Lerp between your normal fog density and 0
+        const normalDensity = 0.1;
+        this.scene.fog.density = normalDensity * (1 - t);
+
+        if(this.threeObj.position.x < -115) {
+            const volume = 1 - ((this.threeObj.position.x-116)/(-125-116));
+            this.sewerAmbient.setVolume(volume);
+        }
+    }
+
+    gameEnd() {
+
     }
 }

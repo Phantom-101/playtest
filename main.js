@@ -71,6 +71,13 @@ const controls = new PointerLockControls( camera, document.body );
 const blocker = document.getElementById( 'blocker' );
 const instructions = document.getElementById( 'instructions' );
 
+const slider = document.getElementById('sensitivity-slider');
+slider.addEventListener('input', (e) => {
+    const sensitivity = parseFloat(e.target.value);
+    // Example: if you use PointerLockControls
+    controls.pointerSpeed = sensitivity; // or your custom property
+});
+
 //Event Listeners
 // #region
 instructions.addEventListener( 'click', function () {
@@ -120,7 +127,9 @@ const player3Obj = new THREE.Mesh( playerGeometry, playerMaterial );
 const playerGO = new Player('Player', player3Obj, document, controls,
   footstepSound,
   flashlightSoundOn,
-  flashlightSoundOff
+  flashlightSoundOff,
+  sewerAmbient,
+  scene
 );
 playerGO.threeObj.position.set(0,3,0);
 playerGO.addToScene(scene);
@@ -145,6 +154,19 @@ const blackCoverGo2 = new GameObject('Black Cover2', blackCoverMesh2);
 blackCoverGo.addToScene(scene);
 blackCoverGo2.addToScene(scene);
 
+// End Mesh
+// Make a large thin box or plane to act as the "sky" at the hallway exit
+const skyGeometry = new THREE.BoxGeometry(1, 80, 120); // width, height, depth
+const skyMaterial = new THREE.MeshBasicMaterial({
+  color: 0x87CEEB, // Sky blue
+  side: THREE.FrontSide // Only need one side visible
+});
+const skyBox = new THREE.Mesh(skyGeometry, skyMaterial);
+
+// Position it just outside your hallway exit
+skyBox.position.set(-170, 20, 4); // Set these to just outside your hallway
+scene.add(skyBox);
+
 // #endregion
 
 // #region Lights
@@ -154,6 +176,11 @@ scene.add(ambientLight);
 // Add a dim hemisphere light for general brightness
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222233, 0.003); // (skyColor, groundColor, intensity)
 scene.add(hemiLight);
+
+// End Light
+const endLight = new THREE.PointLight(0xFFFFFF, 100, 20); // (color, intensity, 20)
+endLight.position.set(-135, 6, 3);
+scene.add(endLight);
 
 // FLASHLIGHT
 // #region
@@ -242,7 +269,7 @@ function updatePhysics(delta) {
 // #endregion
 
 // Initialize Physics Objects (All RBs should be initialized here)
-function initPhysicsObjects() {
+async function initPhysicsObjects() {
   const radius = 0.3;
   const height = 1.4;
   const meshY = 0; // The y position of your mesh's feet
@@ -258,8 +285,9 @@ function initPhysicsObjects() {
 
   blackCoverGo2.createRigidBody(physicsWorld, null, "BB");
   rigidBodies.push({mesh: blackCoverGo2.threeObj, rigidBody: blackCoverGo2.rb});
-
-  sewerLevel.initPhysicsForModelsByGroup();
+  await console.log("Building Sewer Mesh");
+  await sewerLevel.initPhysicsForModelsByGroup();
+  document.getElementById('loading-screen').style.display = 'none';
 }
 // #endregion
 
@@ -308,7 +336,7 @@ async function startGame() {
   });
   console.log("Ammo.js loaded");
 
-  await sewerLevel.assignToPhysics(physicsWorld, rigidBodies);
+  sewerLevel.assignToPhysics(physicsWorld, rigidBodies);
 
   await initPhysicsObjects();
   console.log("Initialized Physics Objects");
@@ -361,11 +389,11 @@ function initLevelController() {
 // Use to load all assets/files
 async function loadAllAssets() {
   console.log("Loading Audio");
-  await loadAudio('sounds/testAudio.mp3', testSound);  
-  await loadAudio('sounds/footstep.mp3', footstepSound);
-  await loadAudio('sounds/flashlightOn.mp3', flashlightSoundOn, 0.5);
-  await loadAudio('sounds/flashlightOff.mp3', flashlightSoundOff, 0.5);
-  await loadAudio('sounds/sewerAmbient.mp3', sewerAmbient, 0.7, true);
+  loadAudio('sounds/testAudio.mp3', testSound);  
+  loadAudio('sounds/footstep.mp3', footstepSound);
+  loadAudio('sounds/flashlightOn.mp3', flashlightSoundOn, 0.5);
+  loadAudio('sounds/flashlightOff.mp3', flashlightSoundOff, 0.5);
+  loadAudio('sounds/sewerAmbient.mp3', sewerAmbient, 0.5, true);
   console.log("       Audio Files Loaded");
   await attachAudio();
   console.log("       Audio Attached");
@@ -377,6 +405,7 @@ async function loadAllAssets() {
   console.log("       Sewer Models Loaded");
   console.log("Models Loaded");
   sewerAmbient.play();
+  camera.lookAt(new THREE.Vector3(-1, camera.position.y, camera.position.z));
 }
 
 window.addEventListener('DOMContentLoaded', startGame);
@@ -391,7 +420,7 @@ const debug_geometry = new THREE.BufferGeometry();
 const debug_line = new THREE.Line(debug_geometry, debug_material);
 scene.add(debug_line);
 
-scene.fog = new THREE.FogExp2(0x222222, 0.07);
+scene.fog = new THREE.FogExp2(0xEFEFEF, 0.09);
 // #region Main Loop
 function animate() {
   const delta = clock.getDelta();
