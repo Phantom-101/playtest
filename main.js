@@ -127,6 +127,7 @@ const testSound = new THREE.PositionalAudio(listener);
 const footstepSound = new THREE.PositionalAudio(listener);
 const flashlightSoundOn = new THREE.PositionalAudio(listener);
 const flashlightSoundOff = new THREE.PositionalAudio(listener);
+const sewerAmbient = new THREE.PositionalAudio(listener);
 // #endregion
 
 
@@ -160,6 +161,23 @@ playerGO.addToScene(scene);
 
 // Sewer Level
 let sewerLevel = new SewerLevel(scene, playerGO);
+
+// Start Objects
+const blackCover = new THREE.BoxGeometry(10,10,1);
+const blackCoverMaterial = new THREE.MeshBasicMaterial( { color: 0x000000 } );
+const blackCoverMesh = new THREE.Mesh( blackCover, blackCoverMaterial );
+blackCoverMesh.castShadow = false;
+blackCoverMesh.receiveShadow = false;
+
+const blackCoverMesh2 = blackCoverMesh.clone();
+blackCoverMesh2.position.set(0,1,-3);
+blackCoverMesh.position.set(0,1,3);
+
+const blackCoverGo = new GameObject('Black Cover', blackCoverMesh);
+const blackCoverGo2 = new GameObject('Black Cover2', blackCoverMesh2);
+blackCoverGo.addToScene(scene);
+blackCoverGo2.addToScene(scene);
+
 // #endregion
 
 
@@ -286,6 +304,12 @@ function initPhysicsObjects() {
   rigidBodies.push({mesh: playerGO.threeObj, rigidBody: playerGO.rb});
   playerGO.rb.body.setAngularFactor(new Ammo.btVector3(0, 1, 0));
 
+  blackCoverGo.createRigidBody(physicsWorld, null, "BB");
+  rigidBodies.push({mesh: blackCoverGo.threeObj, rigidBody: blackCoverGo.rb});
+
+  blackCoverGo2.createRigidBody(physicsWorld, null, "BB");
+  rigidBodies.push({mesh: blackCoverGo2.threeObj, rigidBody: blackCoverGo2.rb});
+
   sewerLevel.initPhysicsForModelsByGroup();
 }
 // #endregion
@@ -311,10 +335,11 @@ function attachAudio() {
   player3Obj.add(footstepSound);
   player3Obj.add(flashlightSoundOn);
   player3Obj.add(flashlightSoundOff);
+  player3Obj.add(sewerAmbient);
 }
 
 // Load Audio Files
-function loadAudio(filename, posAudio_obj, volume = 1) {
+function loadAudio(filename, posAudio_obj, volume = 1, loop = false) {
   return new Promise((resolve, reject) => {
     audioloader.load(filename, (buffer) => {
       posAudio_obj.setBuffer(buffer);
@@ -394,6 +419,7 @@ async function loadAllAssets() {
   await loadAudio('sounds/footstep.mp3', footstepSound);
   await loadAudio('sounds/flashlightOn.mp3', flashlightSoundOn, 0.5);
   await loadAudio('sounds/flashlightOff.mp3', flashlightSoundOff, 0.5);
+  await loadAudio('sounds/sewerAmbient.mp3', sewerAmbient, 0.7, true);
   console.log("       Audio Files Loaded");
   await attachAudio();
   console.log("       Audio Attached");
@@ -404,6 +430,7 @@ async function loadAllAssets() {
   await sewerLevel.loadModels();
   console.log("       Sewer Models Loaded");
   console.log("Models Loaded");
+  sewerAmbient.play();
 }
 
 window.addEventListener('DOMContentLoaded', startGame);

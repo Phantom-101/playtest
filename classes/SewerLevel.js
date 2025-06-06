@@ -50,6 +50,13 @@ export default class SewerLevel {
             } else {
                 console.warn("Radios group not found!");
             }
+
+            const bboxesGroup = this.prefabs["BB_physicsObj"];
+            if(bboxesGroup) {
+                this.makeRBforBBoxes("BB_physicsObj");
+            } else {
+                console.warn("BB_PhysicsObj group not found!");
+            }
         }
         else {
             console.error("Do not load Physics Before Assigning to Physics World");
@@ -69,7 +76,20 @@ export default class SewerLevel {
 
 
 
+    makeRBforBBoxes(groupName) {
+        const group = this.prefabs[groupName];
+        if (!group) {
+            console.warn(`Group ${groupName} not found!`);
+            return;
+        }
 
+        for (let i = 0; i < group.children.length; i++) {
+            const mesh = group.children[i];
+            const go = new GameObject(mesh.name, mesh);
+            go.createRigidBody(this.physicsWorld, null, "BB",1,0.1,0.1);
+            this.rigidBodies.push({mesh: go.threeObj, rigidBody: go.rb}); 
+        }
+    }
 
 
     checkPlayerRadioCollisions(player) {
@@ -117,8 +137,6 @@ export default class SewerLevel {
                 break;
         }
     }
-
-
 
     makeBBforRadio(groupName) {
         const group = this.prefabs[groupName];
@@ -250,8 +268,9 @@ export default class SewerLevel {
     }
 
     // Assigns physics world do to rigid bodies in the class
-    assignToPhysics(physicsWorld) {
+    assignToPhysics(physicsWorld, rigidBodies) {
         this.physicsWorld = physicsWorld;
+        this.rigidBodies = rigidBodies;
     }
 
     removeDoorRigidBody(go) {
