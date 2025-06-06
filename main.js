@@ -19,14 +19,8 @@ import SewerLevel from './classes/SewerLevel.js';
 //IDK
 //import init from 'three/examples/jsm/offscreen/scene.js';
 
-
-
-
-
-
-
-
-
+import { init, NavMeshQuery } from 'recast-navigation';
+import { threeToTiledNavMesh } from '@recast-navigation/three';
 
 // Scene Setup
 const scene = new THREE.Scene();
@@ -37,15 +31,6 @@ const renderer = new THREE.WebGLRenderer();
 renderer.shadowMap.enabled = true;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-
-
-
-
-
-
-
-
-
 
 // #region Cameras
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.21, 1000);
@@ -109,15 +94,6 @@ controls.addEventListener( 'unlock', function () {
 
 // #endregion
 
-
-
-
-
-
-
-
-
-
 // #region Audio Objects
 const listener = new THREE.AudioListener();
 camera.add(listener);
@@ -128,15 +104,6 @@ const footstepSound = new THREE.PositionalAudio(listener);
 const flashlightSoundOn = new THREE.PositionalAudio(listener);
 const flashlightSoundOff = new THREE.PositionalAudio(listener);
 // #endregion
-
-
-
-
-
-
-
-
-
 
 // #region GameObjs
 
@@ -161,15 +128,6 @@ playerGO.addToScene(scene);
 // Sewer Level
 let sewerLevel = new SewerLevel(scene, playerGO);
 // #endregion
-
-
-
-
-
-
-
-
-
 
 // #region Lights
 const ambientLight = new THREE.AmbientLight(0x505050, 0.1);  // Soft white light
@@ -212,15 +170,6 @@ function updateFlashlight() {
 }
 // #endregion
 // #endregion
-
-
-
-
-
-
-
-
-
 
 // #region Physics
 
@@ -290,16 +239,6 @@ function initPhysicsObjects() {
 }
 // #endregion
 
-
-
-
-
-
-
-
-
-
-
 // #region Other Audio
 
 // Attach Audio to ThreeObj Meshes Here
@@ -327,45 +266,10 @@ function loadAudio(filename, posAudio_obj, volume = 1) {
 }
 // #endregion
 
-
-
-
-
-
-
-
-
-
 // #region Text Controller
 const textController = new TextController(document);
 textController.showText("You awake in an empty, dark hallway.");
 // #endregion
-
-
-
-
-
-
-
-
-
-
-// #region Level Controller
-const levelController = new LevelController(scene, playerGO,
-  [new GazerEvent(scene, playerGO, [[0, 0], [0, -10]]), new RainEvent(scene)],
-  textController
-);
-// #endregion
-
-
-
-
-
-
-
-
-
-
 
 // #region Loaders
 // Runs at the start of the game or when DOMContent is Loaded
@@ -384,7 +288,49 @@ async function startGame() {
   await initPhysicsObjects();
   console.log("Initialized Physics Objects");
 
+  await initNavMesh();
+
+  initLevelController();
+
   renderer.setAnimationLoop(animate);
+}
+
+let navMesh, navMeshQuery;
+
+async function initNavMesh() {
+  await init();
+  console.log("Recast initialized");
+
+  const meshes = [];
+  sewerLevel.prefabs["map_noDoors"].traverse((child) => {
+    if(child instanceof THREE.Mesh) {
+      meshes.push(child);
+    }
+  });
+
+  const result = threeToTiledNavMesh(meshes, {
+    tileSize: 16,
+  });
+  navMesh = result.navMesh;
+  console.log(`Nav mesh built: ${result.success}`);
+
+  navMeshQuery = new NavMeshQuery(navMesh);
+}
+
+let levelController;
+
+function initLevelController() {
+  levelController = new LevelController([
+    new GazerEvent(),
+    new RainEvent(),
+  ]);
+  levelController.scene = scene;
+  levelController.playerGO = playerGO;
+  levelController.textController = textController;
+  levelController.navMeshQuery = navMeshQuery;
+  levelController.audioLoader = audioloader;
+  levelController.listener = listener;
+  levelController.levelDone();
 }
 
 // Use to load all assets/files
@@ -409,15 +355,14 @@ async function loadAllAssets() {
 window.addEventListener('DOMContentLoaded', startGame);
 // #endregion
 
+const debug_material = new THREE.LineBasicMaterial({
+	color: 0x0000ff
+});
 
+const debug_geometry = new THREE.BufferGeometry();
 
-
-
-
-
-
-
-
+const debug_line = new THREE.Line(debug_geometry, debug_material);
+scene.add(debug_line);
 
 scene.fog = new THREE.FogExp2(0x222222, 0.07);
 // #region Main Loop
@@ -441,6 +386,22 @@ function animate() {
   } else {
     hemiLight.intensity = 0.003; // 0.003
   }
+
+  let start = playerGO.threeObj.position;
+  let end = { x: 0, y: 0.8, z: 0 };
+  start = navMeshQuery.findClosestPoint(start).point;
+  end = navMeshQuery.findClosestPoint(end).point;
+  const result = navMeshQuery.computePath(start, end);
+  if(!result.success) {
+    console.log(`Pathfinding failed: ${result.error}`);
+  }
+  const points = [];
+  for(const p of result.path) {
+    points.push(new THREE.Vector3(p.x, 1, p.z));
+  }
+  debug_geometry.setFromPoints(points);
+
+  levelController.update(delta);
+
 	renderer.render(scene, useDevCamera ? devCamera : camera);
 }
-

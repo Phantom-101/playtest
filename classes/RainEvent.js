@@ -12,7 +12,7 @@ export default class RainEvent {
         this.end_duration = 15;
         this.rain_height = 10;
         this.rain_region = 20;
-        this.max_rain = 300;
+        this.max_rain = 500;
         this.light_intensity = 0.3;
     }
 
@@ -60,7 +60,11 @@ export default class RainEvent {
         while(this.rain.length < this.rain_limit) {
             const sprite = new THREE.Sprite(this.material);
             sprite.scale.set(0.5, 0.5, 0.5);
-            sprite.position.set((Math.random() - 0.5) * 2 * this.rain_region, this.rain_height, (Math.random() - 0.5) * 2 * this.rain_region);
+            sprite.position.set(
+                this.level.playerGO.threeObj.position.x + (Math.random() - 0.5) * 2 * this.rain_region,
+                this.rain_height,
+                this.level.playerGO.threeObj.position.z + (Math.random() - 0.5) * 2 * this.rain_region
+            );
             sprite.rain_velocity = [(Math.random() - 0.5), (Math.random() - 0.5)];
             this.rain.push(sprite);
             this.level.scene.add(sprite);

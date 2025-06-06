@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@recast-navigation/three": "^0.39.0",
     "ammo.js": "^0.0.10",
+    "recast-navigation": "^0.39.0",
     "three": "^0.168.0"
   },
   "devDependencies": {
