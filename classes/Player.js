@@ -17,7 +17,7 @@ export default class Player extends GameObject {
 
         this.bobBool = false;
         this.bobTime = 0;
-        this.bobAmount = 0.08;
+        this.bobAmount = 0.04;
         this.bobSpeed = 6;
 
         this.footStepSound = footStepSound;
@@ -27,6 +27,7 @@ export default class Player extends GameObject {
         this.flashlightEnabled = true;
 
         this.playerBB = new THREE.Box3().setFromObject(this.threeObj);
+        this.threeObj.visible = false;
     }
 
     /*
@@ -128,7 +129,7 @@ export default class Player extends GameObject {
             ));
         }
         
-        this.camera.position.copy(this.threeObj.position).add(new THREE.Vector3(0, 1, 0)); // Update the camera position to match the player
+        this.camera.position.copy(this.threeObj.position).add(new THREE.Vector3(0, 0.72, 0)); // Update the camera position to match the player
 
 
         
