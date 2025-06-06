@@ -10,7 +10,7 @@ export default class Player extends GameObject {
     ) {
         super(name, threeObj);
         this.initializeControls(document);
-        this.moveSpeed = 0.04;
+        this.moveSpeed = 0.2;
         this.pressedKeys = new Set();
         this.controls = controls;
         this.camera = controls.object;

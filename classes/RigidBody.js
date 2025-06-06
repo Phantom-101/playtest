@@ -101,4 +101,9 @@ export default class RigidBody {
 
         this.physicsWorld.addRigidBody(this.body);
     }
+
+    changeGroupMask(body, group, mask) {
+        this.physicsWorld.removeRigidBody(body);
+        this.physicsWorld.addRigidBody(body, group, mask);
+    }
 }

@@ -378,7 +378,7 @@ async function startGame() {
   });
   console.log("Ammo.js loaded");
 
-  await sewerLevel.assignToPhysics(physicsWorld);
+  await sewerLevel.assignToPhysics(physicsWorld, rigidBodies);
 
   await initPhysicsObjects();
   console.log("Initialized Physics Objects");

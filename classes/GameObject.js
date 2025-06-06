@@ -68,6 +68,7 @@ export default class GameObject {
                 const bbcenter = new THREE.Vector3();
                 bbox.getCenter(bbcenter);
 
+
                 this.threeObj.position.copy(bbcenter);
                 this.rb.createBox(mass, bbcenter, this.threeObj.quaternion, bbsize);
                 break;
