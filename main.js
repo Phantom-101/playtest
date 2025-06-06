@@ -22,9 +22,17 @@ import SewerLevel from './classes/SewerLevel.js';
 import { init, NavMeshQuery } from 'recast-navigation';
 import { threeToTiledNavMesh } from '@recast-navigation/three';
 
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { AfterimagePass } from 'three/addons/postprocessing/AfterimagePass.js';
+import { RenderPixelatedPass } from 'three/addons/postprocessing/RenderPixelatedPass.js';
+import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
 // Scene Setup
 const scene = new THREE.Scene();
 const clock = new THREE.Clock();
+scene.fogOverride = false;
 
 // Rendering
 const renderer = new THREE.WebGLRenderer();
@@ -33,8 +41,25 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // #region Cameras
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.21, 1000);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 scene.add(camera);
+
+// postprocessing
+let composer = new EffectComposer( renderer );
+//composer.addPass( new RenderPass( scene, camera ) ); // Other after image pass
+
+let renderPixelatedPass = new RenderPixelatedPass(6, scene, camera);
+composer.addPass( renderPixelatedPass );
+
+let afterimagePass = new AfterimagePass();
+afterimagePass.uniforms['damp'].value = 0.75;
+//composer.addPass( afterimagePass );
+
+const outputPass = new OutputPass();
+composer.addPass( outputPass );
+
+window.addEventListener( 'resize', onWindowResize );
+// #endregion
 
 // Dev Camera
 // #region 
@@ -136,7 +161,7 @@ playerGO.addToScene(scene);
 // #endregion
 
 // Sewer Level
-let sewerLevel = new SewerLevel(scene, playerGO);
+let sewerLevel = new SewerLevel(scene, playerGO, listener);
 
 // Start Objects
 const blackCover = new THREE.BoxGeometry(10,10,1);
@@ -185,7 +210,7 @@ scene.add(endLight);
 // FLASHLIGHT
 // #region
 const flashlightIntensity = 3;
-const flashlight = new THREE.SpotLight(0xffffff, flashlightIntensity, 15, Math.PI / 7, 0.5);
+const flashlight = new THREE.SpotLight(0xffffff, flashlightIntensity, 15, Math.PI / 6, 0.5);
 flashlight.position.set(0, 0, 0);
 flashlight.target.position.set(0, 0, -1);
 let flashlightTarget = new THREE.Vector3();
@@ -220,7 +245,7 @@ function updateFlashlight() {
 
 // init Physics, Physics Loop, and Physics variables
 // #region 
-const gravityConstant = - 9.8;
+const gravityConstant = - 20;
 let transformAux1;
 let tmpTransform;
 
@@ -321,7 +346,7 @@ function loadAudio(filename, posAudio_obj, volume = 1, loop = false) {
 
 // #region Text Controller
 const textController = new TextController(document);
-textController.showText("You awake in an empty, dark hallway.");
+textController.showText("You awake in an empty, dark hallway.", 20000);
 // #endregion
 
 // #region Loaders
@@ -421,10 +446,38 @@ const debug_line = new THREE.Line(debug_geometry, debug_material);
 scene.add(debug_line);
 
 scene.fog = new THREE.FogExp2(0xEFEFEF, 0.09);
+
+let gameoverbool = false;
+
+function gameEnd() {
+  const blocker = document.getElementById('blocker');
+  const instructions = document.getElementById('instructions');
+  if (blocker && instructions) {
+    blocker.style.display = 'flex';
+    instructions.innerHTML = `
+        <p style="font-size:36px; color: red;">Thanks for playing!</p>
+        <p style="font-size:18px;">You have reached the end.<br>
+    `;
+  }
+}
+
+function onWindowResize() {
+
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  composer.setSize( window.innerWidth, window.innerHeight );
+
+}
+
+
+
+
 // #region Main Loop
 function animate() {
   const delta = clock.getDelta();
-  if(controls.isLocked == true) {
+  if(controls.isLocked == true && !gameoverbool) {
     playerGO.update(delta); // Move the player
     updatePhysics(delta);
     updateFlashlight();
@@ -434,6 +487,12 @@ function animate() {
       radio.update();
     }
     sewerLevel.checkPlayerRadioCollisions(playerGO);
+    if(playerGO.threeObj.position.x < -127) {
+      gameoverbool = true;
+      controls.unlock();
+      gameEnd();
+    }
+    levelController.update(delta);
   }
   
   devControls.update();
@@ -457,7 +516,14 @@ function animate() {
   }
   debug_geometry.setFromPoints(points);
 
-  levelController.update(delta);
-
-	renderer.render(scene, useDevCamera ? devCamera : camera);
+  /*
+  if (useDevCamera) {
+    renderer.render(scene, devCamera);
+  } else {
+    // Make sure the RenderPass uses the main camera
+    composer.render();
+  }
+  */
+ 
+  renderer.render(scene, useDevCamera ? devCamera : camera);
 }

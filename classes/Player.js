@@ -181,17 +181,16 @@ export default class Player extends GameObject {
         let t = (x - fadeStart) / (fadeEnd - fadeStart);
         t = Math.max(0, Math.min(1, t));
 
-        // Lerp between your normal fog density and 0
-        const normalDensity = 0.1;
-        this.scene.fog.density = normalDensity * (1 - t);
+        if(!this.scene.fogOverride) {
+            // Lerp between your normal fog density and 0
+            const normalDensity = 0.1;
+            this.scene.fog.density = normalDensity * (1 - t);
+        }
 
-        if(this.threeObj.position.x < -115) {
-            const volume = 1 - ((this.threeObj.position.x-116)/(-125-116));
+        if (this.sewerAmbient && this.sewerAmbient.setVolume) {
+            // Fade out as t goes from 0 to 1, clamp to [0,1]
+            const volume = Math.max(0, Math.min(1,t));
             this.sewerAmbient.setVolume(volume);
         }
-    }
-
-    gameEnd() {
-
     }
 }

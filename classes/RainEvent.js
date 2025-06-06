@@ -29,6 +29,9 @@ export default class RainEvent {
         this.level.scene.add(this.light);
         this.level.textController.showText("Is it... raining?");
         this.level.textController.showUnique("RAIN_LORE", "This strange substance is viscous, but otherwise harmless. A red haze fills the air.");
+        this.level.scene.fogOverride = true;
+        this.level.scene.fog.color = new THREE.Color(0x331111);
+        this.level.scene.fog.density = 0.3;
     }
 
     update(delta) {
@@ -89,6 +92,9 @@ export default class RainEvent {
     }
 
     end() {
+        this.level.scene.fogOverride = false;
+        this.level.scene.fog.density = 0;
+        this.level.scene.fog.color = new THREE.Color(0xEFEFEF);
         this.level.scene.remove(this.light);
         this.light = null;
         this.material.dispose();

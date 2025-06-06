@@ -5,9 +5,10 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import RigidBody from './RigidBody';
 import GameObject from './GameObject';
 import Radio from './Radio';
+import { init } from 'recast-navigation';
 
 export default class SewerLevel {
-    constructor(scene, playerGO, physicsWorld) {
+    constructor(scene, playerGO, listener) {
         this.scene = scene;
         this.playerGO = playerGO;
 
@@ -17,6 +18,8 @@ export default class SewerLevel {
         this.startDoors = [];
         this.endDoors = [];
 
+        this.listener = listener;
+        this.audioLoader = new THREE.AudioLoader();
         this.radios = [];
         this.radioPoints = 0;
     }
@@ -51,6 +54,7 @@ export default class SewerLevel {
             } else {
                 console.warn("Radios group not found!");
             }
+            this.initRadioAudio();
 
             const bboxesGroup = this.prefabs["BB_physicsObj"];
             if(bboxesGroup) {
@@ -77,6 +81,41 @@ export default class SewerLevel {
 
 
 
+    
+
+
+
+
+
+
+
+    initRadioAudio() {
+        for(let i = 0; i < this.radios.length; i++) {
+            const audio = new THREE.PositionalAudio(this.listener);
+            this.loadAudio("sounds/testAudio.mp3", audio, 1, true);
+            audio.setRefDistance(0.5);
+            audio.setMaxDistance(3);
+            audio.setRolloffFactor(5); 
+
+            this.radios[i].audio = audio;
+            this.radios[i].threeObj.add(audio);
+        }
+    }
+
+    // Load Audio Files
+    async loadAudio(filename, posAudio_obj, volume = 1, loop = false) {
+        return new Promise((resolve, reject) => {
+            this.audioLoader.load(filename, (buffer) => {
+            posAudio_obj.setBuffer(buffer);
+            posAudio_obj.setVolume(volume);
+            posAudio_obj.setRefDistance(1);
+            resolve();
+            console.log("       Audio Loaded: " + filename);
+            posAudio_obj.play();
+            }, undefined, reject);
+        });
+    }
+
     makeRBforBBoxes(groupName) {
         const group = this.prefabs[groupName];
         if (!group) {
@@ -91,7 +130,6 @@ export default class SewerLevel {
             this.rigidBodies.push({mesh: go.threeObj, rigidBody: go.rb}); 
         }
     }
-
 
     checkPlayerRadioCollisions(player) {
         for (let i = this.radios.length - 1; i >= 0; i--) {
