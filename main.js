@@ -436,15 +436,6 @@ async function loadAllAssets() {
 window.addEventListener('DOMContentLoaded', startGame);
 // #endregion
 
-const debug_material = new THREE.LineBasicMaterial({
-	color: 0x0000ff
-});
-
-const debug_geometry = new THREE.BufferGeometry();
-
-const debug_line = new THREE.Line(debug_geometry, debug_material);
-scene.add(debug_line);
-
 scene.fog = new THREE.FogExp2(0xEFEFEF, 0.09);
 
 let gameoverbool = false;
@@ -502,17 +493,12 @@ function animate() {
     hemiLight.intensity = 0.003; // 0.003
   }
 
-  let start = playerGO.threeObj.position;
-  let end = { x: 0, y: 0.8, z: 0 };
-  start = navMeshQuery.findClosestPoint(start).point;
-  end = navMeshQuery.findClosestPoint(end).point;
-  const result = navMeshQuery.computePath(start, end);
-  if(!result.success) {
-    console.log(`Pathfinding failed: ${result.error}`);
-  }
-  const points = [];
-  for(const p of result.path) {
-    points.push(new THREE.Vector3(p.x, 1, p.z));
+  /*
+  if (useDevCamera) {
+    renderer.render(scene, devCamera);
+  } else {
+    // Make sure the RenderPass uses the main camera
+    composer.render();
   }
   debug_geometry.setFromPoints(points);
 
