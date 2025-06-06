@@ -7,6 +7,7 @@ import GameObject from './classes/GameObject.js';
 import Player from './classes/Player.js';
 import LevelController from './classes/LevelController.js'
 import TextController from './classes/TextController.js';
+import Radio from './classes/Radio.js';
 
 // Enemy Event Classes
 import GazerEvent from './classes/GazerEvent.js';
@@ -428,6 +429,10 @@ function animate() {
     updateFlashlight();
     controls.update(delta);    
     levelController.update(delta);
+    for(const radio of sewerLevel.radios) {
+      radio.update();
+    }
+    sewerLevel.checkPlayerRadioCollisions(playerGO);
   }
   
   devControls.update();

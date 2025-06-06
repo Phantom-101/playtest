@@ -15,17 +15,6 @@ export default class GameObject {
     }
 
     move() {
-        /*
-        // Update the position of the object based on its acceleration
-        this.velocity.x += this.acceleration.x;
-        this.velocity.y += this.acceleration.y;
-        this.velocity.z += this.acceleration.z;
-
-        // Update the position of the object based on its velocity
-        this.threeObj.position.x += this.velocity.x;
-        this.threeObj.position.y += this.velocity.y;
-        this.threeObj.position.z += this.velocity.z;
-        */
     }
 
     addToScene(scene) {

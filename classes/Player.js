@@ -25,6 +25,8 @@ export default class Player extends GameObject {
         this.flashlightSoundOff = flashlightSoundOff;
 
         this.flashlightEnabled = true;
+
+        this.playerBB = new THREE.Box3().setFromObject(this.threeObj);
     }
 
     /*
@@ -164,5 +166,6 @@ export default class Player extends GameObject {
     update(delta) {
         this.move();
         this.updateHeadBob(delta);
+        this.playerBB.setFromObject(this.threeObj);
     }
 }
