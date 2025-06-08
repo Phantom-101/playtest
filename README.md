@@ -18,8 +18,6 @@ Sketch Fab:
 * PT Paintings: https://skfb.ly/6YvyY
 * Radio Model: https://skfb.ly/6XYP6
 * Kannonzaki Battery Historic Site: https://skfb.ly/oopFS
-  * Sewer Outside Model
 
-Other Code Stuff:
-
+  * Sewer Outside ModelOther Code Stuff:
 * SimonDev - Building a Simple First Person Camera: https://youtu.be/oqKzxPMLWxo

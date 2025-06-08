@@ -128,7 +128,7 @@ export default class SewerLevel {
                     audio.setVolume(0.5);
                     break;
                 case 3:
-                    audio.setVolume(3);
+                    audio.setVolume(4);
                     break;
                 case 4:
                     audio.setVolume(1.7);
