@@ -257,6 +257,12 @@ export default class SewerLevel {
 
         let startTime = null;
 
+        go.audio.setMaxDistance(1000);
+        go.audio.setRolloffFactor(1);
+        go.audio.setVolume(5);
+        go.audio.play();
+        
+
         const animate = (now) => {
             if (startTime === null) startTime = now;
             const elapsed = (now - startTime) / 1000;
@@ -291,8 +297,12 @@ export default class SewerLevel {
                 } else if(groupName == "End_Doors") {
                     this.endDoors.push(go);
                 }
-
-                //newDoors.push(go);
+                
+                // 2. Create Audio Object
+                let audio = new THREE.PositionalAudio(this.listener);
+                this.loadAudio("sounds/doorOpen.mp3", audio, 1, false);
+                go.audio = audio;                
+                child.add(audio);
             }
         });
 

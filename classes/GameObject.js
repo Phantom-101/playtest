@@ -7,6 +7,7 @@ export default class GameObject {
         this.threeObj = threeObj; // Geometry of the object
         this.velocity = new THREE.Vector3(0, 0, 0); // Initialize velocity to zero
         this.acceleration = new THREE.Vector3(0, 0, 0); // Initialize acceleration to zero
+        this.audio = null;
         
         if(threeObj.position == undefined)
             this.threeObj.position.set(0, 0, 0);
