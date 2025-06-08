@@ -1,3 +1,5 @@
+Should be able to just: `npm install`
+
 Audio Sources:
 
 * Door Opening: https://youtu.be/9ZG5q0X1cqI
