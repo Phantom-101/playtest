@@ -11,6 +11,7 @@ export default class SewerLevel {
     constructor(scene, playerGO, listener) {
         this.scene = scene;
         this.playerGO = playerGO;
+        this.camera = playerGO.camera;
 
         this.gltfLoader = new GLTFLoader();
         this.prefabs = {};
@@ -54,7 +55,7 @@ export default class SewerLevel {
             } else {
                 console.warn("Radios group not found!");
             }
-            this.initRadioAudio();
+            await this.initRadioAudio();
 
             const bboxesGroup = this.prefabs["BB_physicsObj"];
             if(bboxesGroup) {
@@ -89,32 +90,77 @@ export default class SewerLevel {
 
 
 
-    initRadioAudio() {
+    async initRadioAudio() {
         for(let i = 0; i < this.radios.length; i++) {
-            const audio = new THREE.PositionalAudio(this.listener);
-            this.loadAudio("sounds/testAudio.mp3", audio, 1, true);
-            audio.setRefDistance(0.5);
-            audio.setMaxDistance(3);
-            audio.setRolloffFactor(5); 
-
+            let audio = new THREE.PositionalAudio(this.listener);
+            let filename;
+            switch (i) {
+                case 0:
+                    filename = "sounds/radio1.mp3";
+                    break;
+                case 1:
+                    filename = "sounds/radio3.mp3";
+                    break;
+                case 2:
+                    filename = "sounds/radio2.mp3";
+                    break;
+                case 3:
+                    filename = "sounds/radio6.mp3";
+                    break;
+                case 4:
+                    filename = "sounds/radio5.mp3";
+                    break;
+                case 5:
+                    filename = "sounds/radio4.mp3";
+                    break;
+                default:
+                    filename = "sounds/testAudio.mp3";
+            }
+            await this.loadAudio(filename, audio, 0.15, true);
+            switch (i) {
+                case 0:
+                    audio.setVolume(0.15);
+                    break;
+                case 1:
+                    audio.setVolume(3);
+                    break;
+                case 2:
+                    audio.setVolume(0.5);
+                    break;
+                case 3:
+                    audio.setVolume(3);
+                    break;
+                case 4:
+                    audio.setVolume(1.7);
+                    break;
+                case 5:
+                    audio.setVolume(1.7);
+                    break;
+                default:
+            }
+            console.log("     Loaded Radio Audio");
+            audio.setRefDistance(2.3);
+            audio.setMaxDistance(15);
+            audio.setRolloffFactor(1.5);
+            audio.panner.distanceModel = 'exponential'; // or 'linear', 'exponential'
             this.radios[i].audio = audio;
             this.radios[i].threeObj.add(audio);
         }
+        console.log("Loaded Radio Audio");
     }
 
-    // Load Audio Files
-    async loadAudio(filename, posAudio_obj, volume = 1, loop = false) {
+    loadAudio(filename, posAudio_obj, volume = 1, loop = false) {
         return new Promise((resolve, reject) => {
-            this.audioLoader.load(filename, (buffer) => {
-            posAudio_obj.setBuffer(buffer);
-            posAudio_obj.setVolume(volume);
-            posAudio_obj.setRefDistance(1);
-            resolve();
-            console.log("       Audio Loaded: " + filename);
-            posAudio_obj.play();
+            this.audioLoader.load(filename, function(buffer) {
+                posAudio_obj.setBuffer(buffer);
+                posAudio_obj.setVolume(volume);
+                posAudio_obj.setLoop(loop);                
+                resolve();
+                console.log("       Audio Loaded: " + filename);
+                // Do NOT call play here!
             }, undefined, reject);
-        });
-    }
+    });
+}
 
     makeRBforBBoxes(groupName) {
         const group = this.prefabs[groupName];

@@ -46,17 +46,15 @@ scene.add(camera);
 
 // postprocessing
 let composer = new EffectComposer( renderer );
-//composer.addPass( new RenderPass( scene, camera ) ); // Other after image pass
+composer.addPass( new RenderPass( scene, camera ) );
 
 let renderPixelatedPass = new RenderPixelatedPass(6, scene, camera);
-composer.addPass( renderPixelatedPass );
 
 let afterimagePass = new AfterimagePass();
 afterimagePass.uniforms['damp'].value = 0.75;
 //composer.addPass( afterimagePass );
 
 const outputPass = new OutputPass();
-composer.addPass( outputPass );
 
 window.addEventListener( 'resize', onWindowResize );
 // #endregion
@@ -128,7 +126,6 @@ controls.addEventListener( 'unlock', function () {
 
 // #region Audio Objects
 const listener = new THREE.AudioListener();
-camera.add(listener);
 const audioloader = new THREE.AudioLoader();
 
 const testSound = new THREE.PositionalAudio(listener);
@@ -344,35 +341,32 @@ function loadAudio(filename, posAudio_obj, volume = 1, loop = false) {
 }
 // #endregion
 
+
+
+
+
+
+
+
+
+
+
 // #region Text Controller
 const textController = new TextController(document);
 textController.showText("You awake in an empty, dark hallway.", 20000);
 // #endregion
 
-// #region Loaders
-// Runs at the start of the game or when DOMContent is Loaded
-async function startGame() {
-  await loadAllAssets();
-  console.log("All assets loaded");
 
-  await Ammo().then((lib) => {
-      Ammo = lib;
-      initPhysics();
-  });
-  console.log("Ammo.js loaded");
 
-  sewerLevel.assignToPhysics(physicsWorld, rigidBodies);
 
-  await initPhysicsObjects();
-  console.log("Initialized Physics Objects");
 
-  await initNavMesh();
 
-  initLevelController();
 
-  renderer.setAnimationLoop(animate);
-}
 
+
+
+
+// #region Nav Mesh and Level Controller
 let navMesh, navMeshQuery;
 
 async function initNavMesh() {
@@ -410,6 +404,42 @@ function initLevelController() {
   levelController.listener = listener;
   levelController.levelDone();
 }
+// #endregion
+
+
+
+
+
+
+
+
+
+
+
+// #region Start Game
+// Runs at the start of the game or when DOMContent is Loaded
+async function startGame() {
+  camera.add(listener);
+  await loadAllAssets();
+  console.log("All assets loaded");
+
+  await Ammo().then((lib) => {
+      Ammo = lib;
+      initPhysics();
+  });
+  console.log("Ammo.js loaded");
+
+  sewerLevel.assignToPhysics(physicsWorld, rigidBodies, camera);
+
+  await initPhysicsObjects();
+  console.log("Initialized Physics Objects");
+
+  await initNavMesh();
+
+  initLevelController();
+
+  renderer.setAnimationLoop(animate);
+}
 
 // Use to load all assets/files
 async function loadAllAssets() {
@@ -429,17 +459,26 @@ async function loadAllAssets() {
   await sewerLevel.loadModels();
   console.log("       Sewer Models Loaded");
   console.log("Models Loaded");
-  sewerAmbient.play();
   camera.lookAt(new THREE.Vector3(-1, camera.position.y, camera.position.z));
 }
 
 window.addEventListener('DOMContentLoaded', startGame);
 // #endregion
 
+
+
+
+
+
+
+
+
+// #region Sphaggeti
+// Fog
 scene.fog = new THREE.FogExp2(0xEFEFEF, 0.09);
 
+// Game Over
 let gameoverbool = false;
-
 function gameEnd() {
   const blocker = document.getElementById('blocker');
   const instructions = document.getElementById('instructions');
@@ -452,6 +491,7 @@ function gameEnd() {
   }
 }
 
+// Misc
 function onWindowResize() {
 
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -462,7 +502,42 @@ function onWindowResize() {
 
 }
 
+// Post Processing
+const effectSelect = document.getElementById('effect-select');
+effectSelect.addEventListener('change', (e) => {
+    const value = e.target.value;
 
+    // Remove all effect passes except OutputPass
+    composer.passes = composer.passes.filter(pass => pass instanceof OutputPass);
+
+    if (value === 'pixel') {
+      composer.addPass(renderPixelatedPass);
+    } else if (value === 'none') {
+      // Do nothing
+    }
+    // Add more effects as needed
+
+    composer.addPass(outputPass); // Always last
+});
+
+// Start Audio on Click
+instructions.addEventListener('click', function () {
+    // Resume AudioContext if needed
+    if (THREE.AudioContext && THREE.AudioContext.state === 'suspended') {
+        THREE.AudioContext.resume();
+    }
+    // Play ambient or radio audio as needed
+    if (sewerAmbient && !sewerAmbient.isPlaying) {
+        sewerAmbient.play();
+    }
+    // If you want to play all radio audios:
+    for (const radio of sewerLevel.radios) {
+        if (radio.audio && !radio.audio.isPlaying) {
+            radio.audio.play();
+        }
+    }
+});
+// #endregion
 
 
 // #region Main Loop
@@ -493,23 +568,11 @@ function animate() {
     hemiLight.intensity = 0.003; // 0.003
   }
 
-  /*
+  // Render the scene
   if (useDevCamera) {
     renderer.render(scene, devCamera);
   } else {
     // Make sure the RenderPass uses the main camera
     composer.render();
   }
-  debug_geometry.setFromPoints(points);
-
-  /*
-  if (useDevCamera) {
-    renderer.render(scene, devCamera);
-  } else {
-    // Make sure the RenderPass uses the main camera
-    composer.render();
-  }
-  */
- 
-  renderer.render(scene, useDevCamera ? devCamera : camera);
 }
